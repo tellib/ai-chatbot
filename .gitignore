@@ -1,0 +1,9 @@
+*/.next
+*/node_modules
+*/public
+
+.env
+.env.local
+
+userdatabase.db
+package-lock.json

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "navigation": {
+    "title": "Navigation",
+    "home": "Home",
+    "login": "Login",
+    "signup": "Signup",
+    "dashboard": "Dashboard",
+    "forum": "Forum",
+    "shop": "Shop",
+    "test": "Test",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign-Up",
+    "verb": {
+      "login": "Log In",
+      "signup": "Sign Up"
+    },
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirm": "Confirm Password",
+    "tos": "Accept TOS",
+    "toggle": {
+      "login": "Already have an account? Log in",
+      "signup": "Don't have an account? Sign up"
+    },
+    "error": {
+      "login": "Invalid username or password.",
+      "signup": "Sign-up failed. Please try again.",
+      "unknown": "An unexpected error occurred. Please try again."
+    },
+    "success": {
+      "login": "Login successful.",
+      "signup": "Sign-up successful.",
+      "welcomeback": "Welcome back, {username}!",
+      "welcomenew": "Welcome, {username}!"
+    },
+    "requirements": {
+      "username": "Username must be between 3 and 20 characters",
+      "password": "Password must be at least 6 characters",
+      "confirm": "Passwords must match",
+      "tos": "You must accept the terms of service"
+    },
+    "loading": "Loading..."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languages": {
+      "en-US": "English",
+      "ko-KR": "Korean"
+    },
+    "toggleTheme": "Toggle Theme",
+    "theme": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "System"
+    }
+  }
+}
