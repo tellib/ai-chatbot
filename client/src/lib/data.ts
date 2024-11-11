@@ -1,10 +1,16 @@
-export interface SessionData {
-  user?: {
-    id: string
-    username: string
-  }
+export interface User {
+  id: string
+  username: string
+}
+
+export interface Session {
+  user?: User
   token?: string
   isAuthenticated: boolean
-  setSession: (session: Partial<SessionData>) => void
-  clearSession: () => void
+}
+
+export interface SessionContextType {
+  session: Session
+  setSession: (session: Partial<Session>) => void
+  clearSession: () => Promise<void>
 }

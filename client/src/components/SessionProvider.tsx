@@ -4,23 +4,9 @@ import axios from '@/lib/axios'
 import { deleteCookie, getCookie } from '@/lib/cookies'
 import { SessionData } from '@/lib/data'
 import { useRouter } from 'next/navigation'
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { createContext, ReactNode, useEffect, useState } from 'react'
 
 export const SessionContext = createContext<SessionData | undefined>(undefined)
-
-export function useSession() {
-  const context = useContext(SessionContext)
-  if (!context) {
-    throw new Error('useSession must be used within a SessionProvider')
-  }
-  return context
-}
 
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
@@ -49,11 +35,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await axios.get('/session', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await axios.get('/session')
         // TODO: handle expired token
         if (response.status !== 200) {
           router.replace('/auth')

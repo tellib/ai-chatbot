@@ -3,7 +3,7 @@
 import { useSession } from '@/hooks/useSession'
 
 export default function DashboardPage() {
-  const session = useSession()
+  const { session } = useSession()
 
   if (session.user) {
     return (

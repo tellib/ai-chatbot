@@ -3,7 +3,7 @@
 import { useSession } from '@/hooks/useSession'
 
 export default function UserInfo() {
-  const session = useSession()
+  const { session } = useSession()
 
   if (session.user) {
     return (
