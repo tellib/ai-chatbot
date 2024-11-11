@@ -9,7 +9,7 @@ export default async function Home() {
 
     data = response.data
   } catch (error) {
-    console.error('Logout error:', error)
+    console.error('Home page error:', error)
   }
 
   return (

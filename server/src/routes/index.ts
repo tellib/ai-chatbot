@@ -1,7 +1,7 @@
 import { authMiddleware } from '@/middlewares/authMiddleware'
 import { auth } from '@/routes/auth'
 import { session } from '@/routes/session'
-import { subforum } from '@/routes/subforum'
+// import { sub } from '@/routes/sub'
 import { users } from '@/routes/users'
 import { Router } from 'express'
 
@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 })
 router.use('/auth', auth)
 router.use('/session', authMiddleware, session)
-router.use('/subforum', subforum)
+// router.use('/sub', sub)
 router.use('/users', users)
 
 export default router

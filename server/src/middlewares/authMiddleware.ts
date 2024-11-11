@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { jwtVerify } from 'jose'
-import { JWTExpired } from 'jose/errors'
+import { JWTExpired, JWTInvalid } from 'jose/errors'
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -18,21 +18,21 @@ export const authMiddleware = async (
       const { payload } = await jwtVerify(token, secret)
       req.session = {
         user: {
-          id: payload?.user_id,
-          username: payload?.username,
+          id: payload?.user_id as string,
+          username: payload?.username as string,
+          email: payload?.email as string,
+          role: payload?.role as string,
         },
         token: token,
-        isAuthenticated: true,
       }
       return next()
     } catch (error) {
-      if (error instanceof JWTExpired) {
+      if (error instanceof JWTExpired || error instanceof JWTInvalid) {
         res.clearCookie('token')
-        res.status(401).json({ isAuthenticated: false })
+        res.status(401).json({ message: 'Token is expired or invalid' })
         return
       } else {
-        // res.status(401).json({ message: 'Token is invalid' })
-        res.clearCookie('token')
+        res.status(500).json({ message: 'Internal server error' })
         return
       }
     }

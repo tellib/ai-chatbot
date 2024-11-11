@@ -14,7 +14,7 @@ import { useSession } from '@/hooks/useSession'
 import axios from '@/lib/axios'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -23,8 +23,11 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const t = useTranslations('auth')
-  const session = useSession()
-  const router = useRouter()
+  const { session, refreshSession } = useSession()
+
+  if (session?.user) {
+    redirect('/dashboard')
+  }
 
   const FormSchema = z.object({
     username: z.string().min(2, {
@@ -52,28 +55,17 @@ export default function LoginForm() {
         username,
         password,
       })
-
-      const result = response.data
-
-      session.setSession({
-        isAuthenticated: true,
-        user: result.user,
-        token: result.token,
-      })
-
-      toast({
-        title: t('success.login'),
-        description: t('success.welcomeback', {
-          username: result.user.username,
-        }),
-      })
-
-      router.push('/dashboard')
+      if (response.status === 200) {
+        await refreshSession()
+      } else {
+        throw new Error()
+      }
     } catch (error) {
       toast({
         title: t('error.login'),
         variant: 'destructive',
       })
+      console.log(error)
     } finally {
       setLoading(false)
     }

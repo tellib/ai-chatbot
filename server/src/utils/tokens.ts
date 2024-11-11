@@ -1,8 +1,7 @@
-import { Payload } from '@/models/Payload'
 import { JWT_SECRET } from '@/utils/secrets'
 import { SignJWT } from 'jose'
 
-export const createNewToken = async (payload: Payload) => {
+export const createNewToken = async (payload: any) => {
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()

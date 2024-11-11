@@ -14,7 +14,7 @@ app.use(
 )
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(
-    `${req.method} ${req.url} - ${req.headers.authorization} - ${new Date().toISOString()}`,
+    `${new Date().toISOString()}: ${req.method} ${req.url} - ${req.headers.authorization}`,
   )
   next()
 })

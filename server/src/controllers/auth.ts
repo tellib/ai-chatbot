@@ -1,84 +1,86 @@
-import { getDb } from '@/database'
-import { Session } from '@/models/Session'
+import {
+  createUser,
+  findUserByUsername,
+  verifyUserCredentials,
+} from '@/database/users'
+import { User } from '@/types/express'
 import { cookieConfig } from '@/utils/cookies'
 import { createNewToken } from '@/utils/tokens'
 import { Request, Response } from 'express'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  username: z.string().min(3).max(50),
+  password: z.string().min(6),
+})
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body
-  const db = await getDb()
+  try {
+    const result = userSchema.safeParse(req.body)
+    if (!result.success) {
+      res.status(400).json({
+        message: 'Invalid input',
+        errors: result.error.errors,
+      })
+      return
+    }
 
-  const existingUser = await db.get(
-    `SELECT * FROM users WHERE username = ?`,
-    username,
-  )
-  if (existingUser) {
-    res.status(401).json({
-      message: 'User already exists',
-    })
-    return
-  }
+    const { username, password } = result.data
 
-  await db.run(
-    `INSERT INTO users (username, password) VALUES (?, ?)`,
-    username,
-    password,
-  )
-  const user = await db.get(
-    `SELECT * FROM users WHERE username = ? AND password = ?`,
-    username,
-    password,
-  )
-  if (!user) {
-    res.status(500).json({
-      message: 'Registration error',
-    })
-    return
-  }
+    const existingUser = await findUserByUsername(username)
+    if (existingUser) {
+      res.status(409).json({ message: 'User already exists' })
+      return
+    }
 
-  const token = await createNewToken({
-    user_id: user.id,
-    username: user.username,
-    role: 'user',
-  })
-  res.cookie('token', token, cookieConfig)
-  res.status(201).json({
-    user: {
+    const user = await createUser(username, password)
+    if (!user) {
+      res.status(500).json({ message: 'Registration error' })
+      return
+    }
+
+    const token = await createNewToken({
       id: user.id,
       username: user.username,
-    },
-    token: token,
-    isAuthenticated: true,
-  } as Session)
+      role: 'user',
+    } as User)
+
+    res.cookie('token', token, cookieConfig)
+    res.status(201).json({ message: 'User created successfully' })
+  } catch (error) {
+    console.error('Signup error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
 }
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-  console.log(req.body)
-  const { username, password } = req.body
-  const db = await getDb()
+  try {
+    const result = userSchema.safeParse(req.body)
+    if (!result.success) {
+      res.status(400).json({ message: 'Invalid input' })
+      return
+    }
 
-  const user = await db.get(
-    `SELECT * FROM users WHERE username = ? AND password = ?`,
-    username,
-    password,
-  )
-  if (!user) {
-    res.status(401).json({ message: 'Invalid credentials' })
-    return
-  }
+    const { username, password } = result.data
 
-  const token = await createNewToken({
-    user_id: user.id,
-    username: user.username,
-    role: 'user',
-  })
-  res.cookie('token', token, cookieConfig)
-  res.status(200).json({
-    user: {
+    const user = await verifyUserCredentials(username, password)
+    if (!user) {
+      res.status(401).json({ message: 'Invalid credentials' })
+      return
+    }
+
+    const token = await createNewToken({
       id: user.id,
       username: user.username,
-    },
-    token: token,
-    isAuthenticated: true,
-  })
+      role: user.role || 'user',
+    } as User)
+
+    res
+      .status(200)
+      .cookie('token', token, cookieConfig)
+      .json({ message: 'Login successful' })
+  } catch (error) {
+    console.error('Login error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
 }
