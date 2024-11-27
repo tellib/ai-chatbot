@@ -1,0 +1,70 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+
+
+# services:
+#   client:
+#     build:
+#       context: ./client
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NEXT_PUBLIC_API_URL=http://server:4000
+#     depends_on:
+#       - server
+#     volumes:
+#       - ./client:/app
+#       - /app/node_modules
+#     networks:
+#       - app-network
+
+#   server:
+#     build:
+#       context: ./server
+#       dockerfile: Dockerfile
+#     ports:
+#       - "4000:4000"
+#     environment:
+#       # - DATABASE_URL=postgresql://postgres:postgres@db:5432/myapp
+#       - NODE_ENV=development
+#     # depends_on:
+#     #   - db
+#     volumes:
+#       - ./server:/app
+#       - /app/node_modules
+#     networks:
+#       - app-network
+
+#   # db:
+#   #   image: postgres:17
+#   #   ports:
+#   #     - "5432:5432"
+#   #   environment:
+#   #     - POSTGRES_USER=postgres
+#   #     - POSTGRES_PASSWORD=postgres
+#   #     - POSTGRES_DB=myapp
+#   #   volumes:
+#   #     - postgres_data:/var/lib/postgresql/data
+#   #   networks:
+#   #     - app-network
+
+# # volumes:
+# #   postgres_data:
+
+# networks:
+#   app-network:
+#     driver: bridge

@@ -1,8 +1,15 @@
 'use client'
 
 import axios from '@/lib/axios'
-import { Session, SessionContextType } from '@/lib/data'
+import { Session } from '@/types/session'
 import { createContext, ReactNode, useEffect, useState } from 'react'
+
+export interface SessionContextType {
+  session: Session
+  setSession: (session: Partial<Session>) => void
+  clearSession: () => Promise<void>
+  refreshSession: () => Promise<void>
+}
 
 export const SessionContext = createContext<SessionContextType | undefined>(
   undefined,
@@ -22,8 +29,10 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
   const clearSession = async () => {
     try {
-      await axios.get('/session/clear')
-      setSession(initialSession)
+      const response = await axios.get('/auth/logout')
+      if (response.status === 200) {
+        setSession(initialSession)
+      }
     } catch (error) {
       console.log(error)
     }
@@ -31,16 +40,22 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshSession = async () => {
     try {
-      const response = await axios.get('/session')
+      const response = await axios.get('/auth/session')
       const data = response.data
-      setSession(data)
+      if (!data || !data.user) {
+        setSession(initialSession)
+      } else {
+        setSession(data)
+      }
     } catch (error) {
       console.log(error)
+      setSession(initialSession)
     }
   }
 
   useEffect(() => {
     refreshSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

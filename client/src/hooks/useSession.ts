@@ -1,7 +1,9 @@
 'use client'
 
-import { SessionContext } from '@/components/SessionProvider'
-import { SessionContextType } from '@/lib/data'
+import {
+  SessionContext,
+  SessionContextType,
+} from '@/components/SessionProvider'
 import { useContext } from 'react'
 
 export const useSession = (): SessionContextType => {

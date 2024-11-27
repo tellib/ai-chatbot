@@ -3,7 +3,7 @@ import { LocaleToggle } from '@/components/LocaleToggle'
 import { SessionProvider } from '@/components/SessionProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
@@ -49,6 +49,7 @@ export default async function RootLayout({
             <NextIntlClientProvider messages={messages}>
               <SidebarProvider>
                 <AppSidebar />
+                <SidebarTrigger />
                 {children}
                 <ThemeToggle />
                 <LocaleToggle />

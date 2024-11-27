@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Sidebar,
   SidebarContent,
@@ -5,12 +7,12 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
-import UserInfo from '@/components/UserInfo'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
   Home,
   LayoutDashboard,
@@ -18,11 +20,14 @@ import {
   LogOut,
   Settings,
 } from 'lucide-react'
-import { getTranslations } from 'next-intl/server'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import UserInfo from './UserInfo'
 
-export async function AppSidebar() {
-  const t = await getTranslations('navigation')
+export function AppSidebar() {
+  const t = useTranslations('navigation')
+  const { toggleSidebar } = useSidebar()
+  const isMobile = useIsMobile()
 
   const items = [
     {
@@ -32,7 +37,7 @@ export async function AppSidebar() {
     },
     {
       title: t('login'),
-      url: 'auth',
+      url: 'login',
       icon: LogInIcon,
     },
     {
@@ -55,16 +60,16 @@ export async function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarHeader>
-          <UserInfo />
-        </SidebarHeader>
         <SidebarGroup>
           <SidebarGroupLabel>{t('title')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton
+                    onClick={() => isMobile && toggleSidebar()}
+                    asChild
+                  >
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -76,24 +81,15 @@ export async function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>{t('title')}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('recents')}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarMenu>test</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarFooter></SidebarFooter>
       </SidebarContent>
+      <SidebarFooter>
+        <UserInfo />
+      </SidebarFooter>
     </Sidebar>
   )
 }

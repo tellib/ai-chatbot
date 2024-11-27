@@ -8,7 +8,12 @@ export default function LogoutPage() {
   const { clearSession } = useSession()
 
   useEffect(() => {
-    clearSession()
-    redirect('/')
+    setTimeout(async () => {
+      await clearSession()
+      redirect('/')
+    }, 1000)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  return <div className="mx-auto my-auto p-4">Logging out...</div>
 }

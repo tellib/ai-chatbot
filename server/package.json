@@ -5,15 +5,19 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch --env-file=.env src/server.ts",
-    "write": "npx prettier . --write"
+    "write": "npx prettier . --write",
+    "migrate": "npx prisma migrate dev --name init"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/pg": "^8.11.10",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0",
+    "express": "^4.21.1",
     "jose": "^5.9.6",
+    "pg": "^8.13.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "zod": "^3.23.8"
@@ -25,10 +29,13 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.5.3",
     "eslint": "^8",
+    "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
     "tsx": "^3.14.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">=20.7.0"

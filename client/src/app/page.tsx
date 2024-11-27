@@ -4,12 +4,9 @@ export default async function Home() {
   let data
   try {
     const response = await axios.get('/')
-
-    console.log(response.data)
-
     data = response.data
   } catch (error) {
-    console.error('Home page error:', error)
+    console.error('Home page error', error)
   }
 
   return (

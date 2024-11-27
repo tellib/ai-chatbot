@@ -15,9 +15,8 @@
     "login": "Login",
     "signup": "Signup",
     "dashboard": "Dashboard",
-    "forum": "Forum",
-    "shop": "Shop",
     "test": "Test",
+    "recents": "Recent Chats",
     "settings": "Settings",
     "logout": "Logout"
   },

@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -8,8 +8,8 @@ RUN npm install
 
 COPY . .
 
-ENV PORT=3001
+RUN npm run build
 
-EXPOSE $PORT
+EXPOSE 4000
 
 CMD ["npm", "run", "dev"]
