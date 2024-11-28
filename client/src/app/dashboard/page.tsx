@@ -1,35 +1,67 @@
 'use client'
 
-import { SidebarButton } from '@/components/SidebarButton'
-import { Textarea } from '@/components/ui/textarea'
+import { ChatList } from '@/components/chat/chat-list'
+import { useToast } from '@/hooks/use-toast'
 import { useSession } from '@/hooks/useSession'
+import axios from '@/lib/axios'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const { session } = useSession()
+  const { toast } = useToast()
+  const [chats, setChats] = useState([])
 
-  if (session.user) {
+  useEffect(() => {
+    if (session.user) {
+      fetchChats()
+    }
+  }, [session.user])
+
+  const fetchChats = async () => {
+    try {
+      const { data } = await axios.get('/chat')
+      if (data.success) {
+        setChats(data.data.chats)
+      }
+    } catch (err) {
+      console.error('Failed to fetch chats:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch chats',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleNewChat = async () => {
+    try {
+      const { data } = await axios.post('/chat')
+      if (data.success) {
+        router.push(`/chat/${data.data.id}`)
+      }
+    } catch (err) {
+      console.error('Failed to create chat:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to create new chat',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  if (!session.user) {
     return (
-      <main>
-        {/* <pre className="bg-black/0.5 dark:bg-white/0.5 rounded-lg"> */}
-        {/* <code className="text-sm">{JSON.stringify(session, null, 2)}</code> */}
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button>Open</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>New Window</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
-        <SidebarButton />
-        <Textarea value="0000" onChange={() => {}} />
-        {/* </pre> */}
-      </main>
+      <div className="mx-auto my-auto p-4">
+        <p>Loading...</p>
+      </div>
     )
   }
 
   return (
-    <div className="mx-auto my-auto p-4">
-      <p>Loading...</p>
+    <div className="container mx-auto p-4">
+      <ChatList chats={chats} onNewChat={handleNewChat} />
     </div>
   )
 }

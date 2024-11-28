@@ -1,148 +1,193 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { useEffect, useState } from 'react'
+import { useToast } from '@/hooks/use-toast'
+import { useSession } from '@/hooks/useSession'
+import axios from '@/lib/axios'
+import { SendHorizontal } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 interface Message {
-  id: string
+  id: number
   content: string
-  role: 'user' | 'assistant'
+  role: 'USER' | 'BOT'
   timestamp: string
 }
 
-interface Model {
-  id: string
-  name: string
+interface Chat {
+  id: number
+  title: string
+  messages: Message[]
 }
 
-const models: Model[] = [
-  { id: 'Meta-Llama-3-8B-Instruct.Q4_0.gguf', name: 'Meta Llama 3 8B' },
-  {
-    id: 'Nous-Hermes-2-Mistral-7B-DPO.Q4_0.gguf',
-    name: 'Nous Hermes 2 Mistral',
-  },
-  { id: 'Phi-3-mini-4k-instruct.Q4_0.gguf', name: 'Phi-3 Mini' },
-  { id: 'orca-mini-3b-gguf2-q4_0.gguf', name: 'Orca Mini 3B' },
-  { id: 'gpt4all-13b-snoozy-q4_0.gguf', name: 'GPT4All 13B Snoozy' },
-]
+export default function ChatPage() {
+  const params = useParams()
+  const { session } = useSession()
+  const { toast } = useToast()
+  const [chat, setChat] = useState<Chat | null>(null)
+  const [message, setMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-// Test messages for demonstration
-const testMessages: Message[] = [
-  {
-    id: '1',
-    content: 'Hello! Can you help me with a coding problem?',
-    role: 'user',
-    timestamp: '2024-03-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    content:
-      "Of course! I'd be happy to help. Please describe the problem you're facing.",
-    role: 'assistant',
-    timestamp: '2024-03-15T10:00:05Z',
-  },
-  {
-    id: '3',
-    content:
-      "I'm trying to implement a React component that handles form validation. What's the best approach?",
-    role: 'user',
-    timestamp: '2024-03-15T10:00:30Z',
-  },
-  {
-    id: '4',
-    content:
-      'For form validation in React, I recommend using a form management library like React Hook Form or Formik. These libraries provide excellent validation capabilities and good performance. Would you like me to show you an example implementation?',
-    role: 'assistant',
-    timestamp: '2024-03-15T10:00:45Z',
-  },
-]
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
-  const [selectedModel, setSelectedModel] = useState<string>(models[0].id)
-  const [message, setMessage] = useState<string>('')
-  const [messages, setMessages] = useState<Message[]>([])
-
-  // Load test messages on component mount
   useEffect(() => {
-    setMessages(testMessages)
-  }, [])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!message.trim()) return
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      role: 'user',
-      timestamp: new Date().toISOString(),
+    if (session.user) {
+      fetchChat()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.user, params.id])
 
-    setMessages((prev) => [...prev, newMessage])
-    setMessage('')
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom()
+  }, [chat?.messages])
 
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `This is a simulated response for chat ${params.id}. I'm here to help you with your questions!`,
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
+  const fetchChat = async () => {
+    try {
+      const { data } = await axios.get(`/chat/${params.id}`)
+      if (data.success) {
+        setChat(data.data)
       }
-      setMessages((prev) => [...prev, assistantMessage])
-    }, 1000)
+    } catch (err) {
+      console.error('Failed to fetch chat:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch chat',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!message.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    try {
+      const { data } = await axios.post(`/chat/${params.id}/messages`, {
+        message: message.trim(),
+      })
+
+      if (data.success) {
+        setMessage('')
+        // Update chat with new messages
+        setChat((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            messages: [
+              ...prev.messages,
+              data.data.userMessage,
+              data.data.botMessage,
+            ],
+          }
+        })
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  if (!session.user || !chat) {
+    return (
+      <div className="mx-auto my-auto p-4">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  // Sort messages by timestamp (oldest first)
+  const sortedMessages = [...chat.messages].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  )
+
+  const renderMessage = (message: Message) => {
+    const isUser = message.role === 'USER'
+    return (
+      <div
+        key={message.id}
+        className={`rounded-lg p-4 ${
+          isUser
+            ? 'ml-auto bg-primary text-primary-foreground shadow-sm ring-1 ring-inset ring-primary/10'
+            : 'max-w-none bg-primary-foreground shadow-sm ring-1 ring-inset ring-primary/10'
+        } max-w-[80%]`}
+      >
+        {isUser ? (
+          message.content
+        ) : (
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+              ul: ({ children }) => (
+                <ul className="my-4 list-disc pl-8">{children}</ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="my-4 list-decimal pl-8">{children}</ol>
+              ),
+              li: ({ children }) => <li className="mb-1">{children}</li>,
+              code: ({ className, children, ...props }) => (
+                <code
+                  className={`text-sm text-primary/60 ${className} m-2 my-4 block overflow-x-auto rounded-lg p-4 shadow-sm ring-1 ring-inset ring-primary/10`}
+                  {...props}
+                >
+                  {children}
+                </code>
+              ),
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        )}
+      </div>
+    )
   }
 
   return (
-    <div className="flex h-screen flex-col p-4">
-      <div className="mb-4 w-[200px]">
-        <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a model" />
-          </SelectTrigger>
-          <SelectContent>
-            {models.map((model) => (
-              <SelectItem key={model.id} value={model.id}>
-                {model.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <main className="container mx-auto flex h-[calc(100vh-2rem)] flex-col gap-4 p-4">
+      <h1 className="text-2xl font-bold">{chat.title}</h1>
+
+      <div className="flex-grow space-y-4 overflow-y-auto rounded-lg p-4">
+        {sortedMessages.map(renderMessage)}
+        {/* Invisible div for scrolling */}
+        <div ref={messagesEndRef} />
       </div>
 
-      <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`rounded-lg p-4 ${
-              msg.role === 'user'
-                ? 'ml-12 bg-primary text-primary-foreground'
-                : 'mr-12 bg-muted'
-            }`}
-          >
-            {msg.content}
-          </div>
-        ))}
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="flex max-h-24 gap-2">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
           className="resize-none"
-          placeholder="Type your message here..."
-          rows={1}
+          disabled={isSubmitting}
         />
-        <Button type="submit">Send</Button>
-      </form>
-    </div>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="h-full"
+        >
+          <SendHorizontal className="h-5 w-5" />
+        </Button>
+      </div>
+    </main>
   )
 }

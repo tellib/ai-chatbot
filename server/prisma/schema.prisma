@@ -18,6 +18,7 @@ model User {
   username   String   @unique
   password   String
   created_at DateTime @default(now())
+  role       UserRole @default(USER)
   chats      Chat[]
 
   @@map("users")
@@ -25,6 +26,7 @@ model User {
 
 model Chat {
   id        Int       @id @default(autoincrement())
+  title     String    @default("New Chat")
   timestamp DateTime  @default(now())
   messages  Message[]
   user_id   Int
@@ -34,129 +36,22 @@ model Chat {
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  timestamp DateTime @default(now())
+  id        Int         @id @default(autoincrement())
+  timestamp DateTime    @default(now())
   content   String
-  role      String
+  role      MessageRole
   chat_id   Int
-  chat      Chat     @relation(fields: [chat_id], references: [id])
+  chat      Chat        @relation(fields: [chat_id], references: [id])
 
   @@map("messages")
 }
 
-// model Session {
-//   id        String   @id @default(cuid())
-//   token     String
-//   user_id    Int
-//   user      User 
-//   createdAt DateTime @default(now())
+enum UserRole {
+  USER
+  ADMIN
+}
 
-//   @@map("sessions")
-// }
-
-// model AppUser {
-//   id       Int           @id @default(autoincrement()) // SERIAL PRIMARY KEY
-//   username String        @unique // TEXT NOT NULL UNIQUE
-//   sessions UserSession[] // Relation to UserSession
-
-//   @@map("app_user") // Map the Prisma model to the SQL table name
-// }
-
-// model UserSession {
-//   id         String   @id // TEXT NOT NULL PRIMARY KEY
-//   user_id    Int // INTEGER NOT NULL
-//   expires_at DateTime @map("expires_at") // TIMESTAMPTZ NOT NULL
-//   user       AppUser  @relation(fields: [user_id], references: [id]) // Foreign key reference to AppUser
-
-//   @@map("user_session") // Map the Prisma model to the SQL table name
-// }
-
-// model User {
-//   id            Int        @id @default(autoincrement())
-//   email         String     @unique
-//   username      String     @unique
-//   password      String
-//   role          Role       @default(USER)
-//   createdAt     DateTime   @default(now())
-//   updatedAt     DateTime   @updatedAt
-//   authenticated Boolean    @default(false)
-//   status        UserStatus @default(ACTIVE)
-//   sessions      Session[]
-
-//   posts            Post[]
-//   comments         Comment[]
-//   ownedForums      Forum[]   @relation("ForumOwner")
-//   joinedForums     Forum[]   @relation("ForumMembers")
-//   favoritePosts    Post[]    @relation("UserFavoritePosts")
-//   favoriteForums   Forum[]   @relation("UserFavoriteForums")
-//   likedPosts       Post[]    @relation("UserLikedPosts")
-//   moderatingForums Forum[]   @relation("ForumModerators")
-// }
-
-// enum UserStatus {
-//   ACTIVE
-//   BANNED
-//   SUSPENDED
-//   DELETED
-// }
-
-// model Session {
-//   id        String   @id @default(cuid())
-//   token     String
-//   userId    Int
-//   user      User     @relation(fields: [userId], references: [id])
-//   createdAt DateTime @default(now())
-// }
-
-// model Forum {
-//   id         Int      @id @default(autoincrement())
-//   name       String
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
-//   posts      Post[]
-//   ownerId    Int
-//   owner      User     @relation("ForumOwner", fields: [ownerId], references: [id])
-//   moderators User[]   @relation("ForumModerators")
-//   members    User[]   @relation("ForumMembers")
-//   favorite   User[]   @relation("UserFavoriteForums")
-// }
-
-// model Post {
-//   id       Int       @id @default(autoincrement())
-//   title    String
-//   content  String
-//   likes    Int       @default(0)
-//   comments Comment[]
-
-//   createdAt DateTime   @default(now())
-//   updatedAt DateTime   @updatedAt
-//   authorId  Int
-//   author    User       @relation(fields: [authorId], references: [id])
-//   status    PostStatus @default(DRAFT)
-//   forumId   Int
-//   forum     Forum      @relation(fields: [forumId], references: [id])
-//   favorite  User[]     @relation("UserFavoritePosts")
-//   likedBy   User[]     @relation("UserLikedPosts")
-// }
-
-// model Comment {
-//   id        Int      @id @default(autoincrement())
-//   content   String
-//   authorId  Int
-//   author    User     @relation(fields: [authorId], references: [id])
-//   postId    Int
-//   post      Post     @relation(fields: [postId], references: [id])
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// enum Role {
-//   USER
-//   ADMIN
-// }
-
-// enum PostStatus {
-//   DRAFT
-//   PUBLISHED
-//   DELETED
-// }
+enum MessageRole {
+  USER
+  BOT
+}

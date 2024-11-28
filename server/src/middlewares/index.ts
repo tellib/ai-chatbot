@@ -16,13 +16,13 @@ export const getSessionFromToken = async (
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1]
-    const decryptedToken = decryptToken(token)
 
     try {
+      const decryptedToken = decryptToken(token)
       const { payload } = await jwtVerify(decryptedToken, secret)
       req.session = {
         user: {
-          id: payload?.id as string,
+          id: parseInt(payload?.id as string),
           username: payload?.username as string,
           email: payload?.email as string,
           role: payload?.role as string,
@@ -32,11 +32,36 @@ export const getSessionFromToken = async (
     } catch (error) {
       if (error instanceof JWTExpired || error instanceof JWTInvalid) {
         res.clearCookie('token')
-        console.error('Token expired or invalid:', error)
+        console.log('Token expired or invalid:', error)
       } else {
-        console.error('Token validation error:', error)
+        res.clearCookie('token')
+        console.log('Token validation error:', error)
       }
     }
+  }
+  next()
+}
+
+export const requireUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (!req.session?.user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+  next()
+}
+
+export const isAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (req.session?.user?.role !== 'ADMIN') {
+    res.status(403).json({ message: 'Forbidden' })
+    return
   }
   next()
 }

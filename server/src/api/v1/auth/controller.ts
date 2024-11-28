@@ -17,7 +17,7 @@ export const getSession = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  res.status(200).json(req.session || null)
+  res.json(req.session || null)
 }
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -39,7 +39,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const token = await createToken(user)
     const encryptedToken = encryptToken(token)
     res
-      .status(200)
       .cookie('token', encryptedToken, cookieConfig)
       .json({ message: 'Login successful' })
   } catch (error) {
@@ -55,7 +54,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       maxAge: 0,
     })
     req.session = undefined
-    res.status(200).json({ message: 'Logged out successfully' })
+    res.json({ message: 'Logged out successfully' })
   } catch (error) {
     console.error('Logout error:', error)
     res.status(500).json({ message: 'Internal server error' })

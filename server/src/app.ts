@@ -3,6 +3,7 @@ import { CLIENT_URL } from '@/config/environment'
 import '@/types/express.d'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
+import { getSessionFromToken } from './middlewares'
 
 const app = express()
 
@@ -13,9 +14,10 @@ app.use(
     credentials: true,
   }),
 )
+app.use(getSessionFromToken)
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(
-    `${new Date().toISOString()}: ${req.method} ${req.url} - ${req.headers.authorization}`,
+    `${new Date().toISOString()}: ${req.method} ${req.url} - ${req.session?.user?.id || 'no user'}`,
   )
   next()
 })

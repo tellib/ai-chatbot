@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { getUser } from './controller'
+import { handleGetUser } from './controller'
 
 const router: Router = Router()
 
-router.get('/:id', getUser)
+router.get('/:username', handleGetUser)
 
 export const users: Router = router

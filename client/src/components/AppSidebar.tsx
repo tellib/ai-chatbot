@@ -37,22 +37,22 @@ export function AppSidebar() {
     },
     {
       title: t('login'),
-      url: 'login',
+      url: '/login',
       icon: LogInIcon,
     },
     {
       title: t('dashboard'),
-      url: 'dashboard',
+      url: '/dashboard',
       icon: LayoutDashboard,
     },
     {
       title: t('settings'),
-      url: 'settings',
+      url: '/settings',
       icon: Settings,
     },
     {
       title: t('logout'),
-      url: 'logout',
+      url: '/logout',
       icon: LogOut,
     },
   ]

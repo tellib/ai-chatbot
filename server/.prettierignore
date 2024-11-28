@@ -1,6 +1,0 @@
-# Ignore artifacts:
-build
-coverage
-
-# shadcn
-src/types/express.d.ts
