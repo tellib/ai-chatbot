@@ -1,6 +1,15 @@
 import { Request, Response } from 'express'
-import { createChat, findChatById, getChats, updateChatTitle } from './service'
+import {
+  createChat,
+  findChatById,
+  getChats,
+  getRecentChats,
+  updateChatTitle,
+} from './service'
 
+/**
+ * Gets a chat by its id
+ */
 export const handleGetChat = async (req: Request, res: Response) => {
   try {
     const chat = await findChatById(
@@ -16,6 +25,21 @@ export const handleGetChat = async (req: Request, res: Response) => {
   }
 }
 
+/**
+ * Gets the recent chats of a user
+ */
+export const handleGetRecentChats = async (req: Request, res: Response) => {
+  try {
+    const chats = await getRecentChats(req.session!.user!.id)
+    res.json({ success: true, data: chats })
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch chats' })
+  }
+}
+
+/**
+ * Gets the chats of a user
+ */
 export const handleGetChats = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1
@@ -28,6 +52,9 @@ export const handleGetChats = async (req: Request, res: Response) => {
   }
 }
 
+/**
+ * Creates a new chat
+ */
 export const handleCreateChat = async (req: Request, res: Response) => {
   try {
     const chat = await createChat(req.session!.user!.id)
@@ -37,6 +64,9 @@ export const handleCreateChat = async (req: Request, res: Response) => {
   }
 }
 
+/**
+ * Updates the title of a chat
+ */
 export const handleUpdateTitle = async (req: Request, res: Response) => {
   try {
     const { title } = req.body

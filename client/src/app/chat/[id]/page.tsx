@@ -11,9 +11,8 @@ import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 
 interface Message {
-  id: number
   content: string
-  role: 'USER' | 'BOT'
+  role: 'user' | 'assistant'
   timestamp: string
 }
 
@@ -28,7 +27,11 @@ export default function ChatPage() {
   const { session } = useSession()
   const { toast } = useToast()
   const [chat, setChat] = useState<Chat | null>(null)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState<Message>({
+    content: '',
+    role: 'user',
+    timestamp: new Date().toISOString(),
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -65,29 +68,47 @@ export default function ChatPage() {
   }
 
   const handleSubmit = async () => {
-    if (!message.trim() || isSubmitting) return
+    // validate message
+    if (!message.content.trim() || isSubmitting) return
+
+    // update chat with new user message
+    setChat((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        messages: [...prev.messages, message],
+      }
+    })
 
     setIsSubmitting(true)
+
+    // Create temporary assistant message for streaming
+    const assistantMessage: Message = {
+      content: '',
+      role: 'assistant',
+      timestamp: new Date().toISOString(),
+    }
+
+    // Add empty assistant message that will be updated with stream
+    setChat((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        messages: [...prev.messages, assistantMessage],
+      }
+    })
+
     try {
-      const { data } = await axios.post(`/chat/${params.id}/messages`, {
-        message: message.trim(),
+      // Send message to server but don't update chat state with the response
+      await axios.post(`/chat/${params.id}/message`, {
+        message: message.content.trim(),
       })
 
-      if (data.success) {
-        setMessage('')
-        // Update chat with new messages
-        setChat((prev) => {
-          if (!prev) return prev
-          return {
-            ...prev,
-            messages: [
-              ...prev.messages,
-              data.data.userMessage,
-              data.data.botMessage,
-            ],
-          }
-        })
-      }
+      setMessage({
+        content: '',
+        role: 'user',
+        timestamp: '',
+      })
     } catch (err) {
       console.error('Failed to send message:', err)
       toast({
@@ -95,9 +116,58 @@ export default function ChatPage() {
         description: 'Failed to send message',
         variant: 'destructive',
       })
-    } finally {
       setIsSubmitting(false)
+      return
     }
+
+    // get llm stream through SSE
+    const eventSource = new EventSource(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://server:4000/api/v1'}/chat/${
+        params.id
+      }/message/stream`,
+      { withCredentials: true },
+    )
+
+    let accumulatedContent = '' // Add this to accumulate streamed content
+
+    eventSource.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data)
+
+      if (data.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
+          variant: 'destructive',
+        })
+        eventSource.close()
+        setIsSubmitting(false)
+        return
+      }
+
+      // Accumulate content and update the last message
+      accumulatedContent += data.data.chunk
+      setChat((prev) => {
+        if (!prev) return prev
+        const messages = [...prev.messages]
+        const lastMessage = messages[messages.length - 1]
+        lastMessage.content = accumulatedContent // Use accumulated content
+        return {
+          ...prev,
+          messages,
+        }
+      })
+    })
+
+    eventSource.addEventListener('error', () => {
+      console.error('SSE Error')
+      eventSource.close()
+      setIsSubmitting(false)
+    })
+
+    eventSource.addEventListener('done', () => {
+      eventSource.close()
+      setIsSubmitting(false)
+    })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -115,16 +185,16 @@ export default function ChatPage() {
     )
   }
 
-  // Sort messages by timestamp (oldest first)
+  // show oldest first
   const sortedMessages = [...chat.messages].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
   const renderMessage = (message: Message) => {
-    const isUser = message.role === 'USER'
+    const isUser = message.role === 'user'
     return (
       <div
-        key={message.id}
+        key={message.timestamp}
         className={`rounded-lg p-4 ${
           isUser
             ? 'ml-auto bg-primary text-primary-foreground shadow-sm ring-1 ring-inset ring-primary/10'
@@ -173,12 +243,11 @@ export default function ChatPage() {
 
       <div className="flex max-h-24 gap-2">
         <Textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={message.content}
+          onChange={(e) => setMessage({ ...message, content: e.target.value })}
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
           className="resize-none"
-          disabled={isSubmitting}
         />
         <Button
           onClick={handleSubmit}

@@ -1,11 +1,16 @@
 import { Router } from 'express'
-import { getSession, login, logout, signUp } from './controller'
+import {
+  handleGetSession,
+  handleLogin,
+  handleLogout,
+  handleRegister,
+} from './controller'
 
 const router: Router = Router()
 
-router.post('/login', login)
-router.post('/signup', signUp)
-router.get('/session', getSession)
-router.get('/logout', logout)
+router.post('/login', handleLogin)
+router.post('/signup', handleRegister)
+router.get('/session', handleGetSession)
+router.get('/logout', handleLogout)
 
 export const auth: Router = router

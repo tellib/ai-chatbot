@@ -39,7 +39,9 @@
     "error": {
       "login": "Invalid username or password.",
       "signup": "Sign-up failed. Please try again.",
-      "unknown": "An unexpected error occurred. Please try again."
+      "unknown": "An unexpected error occurred. Please try again.",
+      "server": "An unexpected server error occurred. Please try again.",
+      "input": "Invalid input."
     },
     "success": {
       "login": "Login successful.",

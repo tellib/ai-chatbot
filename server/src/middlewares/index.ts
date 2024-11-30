@@ -13,9 +13,10 @@ export const getSessionFromToken = async (
   next: NextFunction,
 ): Promise<void> => {
   const authHeader = req.headers.authorization
+  const cookieToken = req.cookies?.token
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1]
+  if ((authHeader && authHeader.startsWith('Bearer ')) || cookieToken) {
+    const token = authHeader?.split(' ')[1] || cookieToken
 
     try {
       const decryptedToken = decryptToken(token)

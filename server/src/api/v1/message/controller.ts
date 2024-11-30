@@ -1,10 +1,12 @@
+import { getDb } from '@/config/database'
+import { model } from '@/config/gpt4all'
 import { Request, Response } from 'express'
-import {
-  createMessage as createNewMessage,
-  getChatMessages,
-  getResponseFromLLM,
-} from './service'
+import { createCompletionStream } from 'gpt4all'
+import { createMessage, getChatMessages } from './service'
 
+/**
+ * Gets the messages of a chat
+ */
 export const handleGetMessages = async (req: Request, res: Response) => {
   try {
     const chat_id = parseInt(req.params.chat_id)
@@ -18,57 +20,76 @@ export const handleGetMessages = async (req: Request, res: Response) => {
   }
 }
 
+/**
+ * Creates a new message
+ */
 export const handleNewMessage = async (req: Request, res: Response) => {
   const chat_id = parseInt(req.params.chat_id)
   const { message } = req.body
 
-  if (!message?.trim()) {
-    return res
-      .status(400)
-      .json({ success: false, error: 'Message is required' })
+  const newMessage = await createMessage(chat_id, message, 'user')
+  res.json({ success: true, data: newMessage })
+}
+
+/**
+ * Gets a stream of messages
+ */
+export const handleGetStream = async (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
+  const chat_id = parseInt(req.params.chat_id)
+
+  const sendSSE = (data: { data: any } | { error: string }) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`)
+  }
+
+  if (isNaN(chat_id) || chat_id <= 0) {
+    sendSSE({ error: 'Invalid chat ID' })
+    return res.end()
   }
 
   try {
-    // Add user message to db
-    const userMessage = await createNewMessage(chat_id, message, 'USER')
+    const prisma = getDb()
+    const previousMessages = await prisma.message.findMany({
+      where: {
+        chat_id: chat_id,
+      },
+      orderBy: {
+        timestamp: 'asc',
+      },
+      select: {
+        content: true,
+        role: true,
+      },
+    })
 
-    try {
-      // Get response from LLM
-      const response = await getResponseFromLLM(message)
+    const chat = await model.createChatSession({
+      temperature: 0.8,
+      systemPrompt: '### System:\nYou are an advanced AI assistant.\n\n',
+    })
 
-      // Add bot response to db
-      const botMessage = await createNewMessage(chat_id, response, 'BOT')
+    const stream = createCompletionStream(chat, previousMessages)
+    let fullResponse = ''
 
-      res.json({
-        success: true,
-        data: {
-          userMessage,
-          botMessage,
-        },
+    stream.tokens.on('data', (chunk) => {
+      fullResponse += chunk
+      sendSSE({
+        data: { chunk },
       })
-    } catch (llmError) {
-      // If LLM fails, we still want to save the user message
-      console.error('LLM Error:', llmError)
+    })
 
-      // Create a fallback bot message
-      const fallbackResponse =
-        "I apologize, but I'm having trouble processing your request at the moment. Please try again later."
-      const botMessage = await createNewMessage(
-        chat_id,
-        fallbackResponse,
-        'BOT',
-      )
+    await stream.result
+    await createMessage(chat_id, fullResponse, 'assistant')
 
-      res.json({
-        success: true,
-        data: {
-          userMessage,
-          botMessage,
-        },
-      })
-    }
+    // Send done event
+    res.write('event: done\ndata: {}\n\n')
+
+    res.end()
   } catch (error) {
-    console.error('Message handling error:', error)
-    res.status(500).json({ success: false, error: 'Failed to process message' })
+    console.error('Stream error:', error)
+    sendSSE({ error: 'Failed to process stream' })
+    res.end()
   }
 }

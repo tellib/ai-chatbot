@@ -1,5 +1,11 @@
 import { getDb } from '@/config/database'
 
+/**
+ * Finds a chat by its id
+ * @param user_id The id of the user
+ * @param chat_id The id of the chat
+ * @returns The chat object
+ */
 export async function findChatById(user_id: number, chat_id: number) {
   const prisma = getDb()
   const chat = await prisma.chat.findFirst({
@@ -24,6 +30,11 @@ export async function findChatById(user_id: number, chat_id: number) {
   return chat
 }
 
+/**
+ * Creates a new chat
+ * @param user_id The id of the user
+ * @returns The created chat object
+ */
 export async function createChat(user_id: number) {
   const prisma = getDb()
   return prisma.chat.create({
@@ -34,6 +45,13 @@ export async function createChat(user_id: number) {
   })
 }
 
+/**
+ * Updates the title of a chat
+ * @param user_id The id of the user
+ * @param chat_id The id of the chat
+ * @param title The new title of the chat
+ * @returns The updated chat object
+ */
 export async function updateChatTitle(
   user_id: number,
   chat_id: number,
@@ -46,6 +64,13 @@ export async function updateChatTitle(
   })
 }
 
+/**
+ * Gets the chats of a user
+ * @param user_id The id of the user
+ * @param page The page number
+ * @param pageSize The number of chats per page
+ * @returns The chats and total number of chats
+ */
 export async function getChats(user_id: number, page = 1, pageSize = 20) {
   const prisma = getDb()
   const skip = (page - 1) * pageSize
@@ -73,4 +98,24 @@ export async function getChats(user_id: number, page = 1, pageSize = 20) {
     total,
     hasMore: skip + chats.length < total,
   }
+}
+
+/**
+ * Gets the recent chats of a user
+ * @param user_id The id of the user
+ * @returns The recent chats
+ */
+export async function getRecentChats(user_id: number) {
+  const prisma = getDb()
+
+  const recentChats = await prisma.chat.findMany({
+    where: { user_id },
+    orderBy: { timestamp: 'desc' },
+    take: 10,
+    select: {
+      id: true,
+      title: true,
+    },
+  })
+  return recentChats
 }

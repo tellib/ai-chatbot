@@ -8,11 +8,11 @@ import { users } from './user/routes'
 const router: Router = Router()
 
 router.get('/', (req, res) => {
-  res.json({ message: 'Hello, World!', username: req.session?.user?.username })
+  res.json({ message: 'Hello, World!' })
 })
 router.use('/auth', auth)
 router.use('/user', users)
 router.use('/chat', requireUser, chats)
-router.use('/chat/:chat_id/messages', requireUser, messages)
+router.use('/chat/:chat_id/message', requireUser, messages)
 
 export { router }

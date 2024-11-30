@@ -1,7 +1,7 @@
 import { AppSidebar } from '@/components/AppSidebar'
+import { ChatsProvider } from '@/components/ChatsProvider'
 import { SessionProvider } from '@/components/SessionProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
@@ -39,22 +39,24 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <NextIntlClientProvider messages={messages}>
-              <SidebarProvider>
-                <AppSidebar />
-                {children}
-                <ThemeToggle />
-                {/* <LocaleToggle /> */}
-                <Toaster />
-              </SidebarProvider>
-            </NextIntlClientProvider>
-          </ThemeProvider>
+          <ChatsProvider>
+            <Toaster />
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NextIntlClientProvider messages={messages}>
+                <SidebarProvider>
+                  <AppSidebar />
+                  {children}
+                  {/* <ThemeToggle /> */}
+                  {/* <LocaleToggle /> */}
+                </SidebarProvider>
+              </NextIntlClientProvider>
+            </ThemeProvider>
+          </ChatsProvider>
         </SessionProvider>
       </body>
     </html>

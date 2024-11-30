@@ -2,29 +2,35 @@ import { cookieConfig } from '@/config/cookies'
 import { createToken, encryptToken } from '@/utils/tokens'
 import { Request, Response } from 'express'
 import { z } from 'zod'
-import {
-  createUser,
-  findUserByUsername,
-  verifyUserCredentials,
-} from './service'
+import { checkExistingUser, createUser, verifyUserCredentials } from './service'
 
 const userSchema = z.object({
   username: z.string().min(2).max(50),
   password: z.string().min(6).max(50),
 })
 
-export const getSession = async (
+/**
+ * Gets the session by sending the session cookie in the response
+ */
+export const handleGetSession = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  res.json(req.session || null)
+  res.json(req.session)
 }
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+/**
+ * Logs in a user by verifying their credentials and setting the session cookie
+ */
+export const handleLogin = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const result = userSchema.safeParse(req.body)
+
     if (!result.success) {
-      res.status(400).json({ message: 'Invalid input' })
+      res.status(400).end()
       return
     }
 
@@ -32,66 +38,65 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const user = await verifyUserCredentials(username, password)
     if (!user) {
-      res.status(401).json({ message: 'Invalid credentials' })
+      res.status(401).end()
       return
     }
 
     const token = await createToken(user)
     const encryptedToken = encryptToken(token)
-    res
-      .cookie('token', encryptedToken, cookieConfig)
-      .json({ message: 'Login successful' })
+    res.cookie('token', encryptedToken, cookieConfig).end()
   } catch (error) {
-    console.error('Login error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(500).end()
   }
 }
 
-export const logout = async (req: Request, res: Response): Promise<void> => {
+/**
+ * Logs out a user by clearing the session cookie
+ */
+export const handleLogout = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    res.clearCookie('token', {
-      ...cookieConfig,
-      maxAge: 0,
-    })
     req.session = undefined
-    res.json({ message: 'Logged out successfully' })
+    res.clearCookie('token').json(req.session)
   } catch (error) {
-    console.error('Logout error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(500).end()
   }
 }
 
-export const signUp = async (req: Request, res: Response): Promise<void> => {
+/**
+ * Registers a user by creating a new user and setting the session cookie
+ */
+export const handleRegister = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const result = userSchema.safeParse(req.body)
     if (!result.success) {
-      res.status(400).json({
-        message: 'Invalid input',
-        errors: result.error.errors,
-      })
+      res.status(400).end()
       return
     }
 
     const { username, password } = result.data
 
-    const existingUser = await findUserByUsername(username)
+    const existingUser = await checkExistingUser(username)
     if (existingUser) {
-      res.status(409).json({ message: 'User already exists' })
+      res.status(409).end()
       return
     }
 
     const user = await createUser(username, password)
     if (!user) {
-      res.status(500).json({ message: 'Registration error' })
+      res.status(500).end()
       return
     }
 
     const token = await createToken(user)
     const encryptedToken = encryptToken(token)
-    res.cookie('token', encryptedToken, cookieConfig)
-    res.status(201).json({ message: 'User created successfully' })
+    res.status(201).cookie('token', encryptedToken, cookieConfig).end()
   } catch (error) {
-    console.error('Signup error:', error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(500).end()
   }
 }

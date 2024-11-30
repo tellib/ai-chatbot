@@ -1,4 +1,3 @@
-import axios from '@/config/axios'
 import { getDb } from '@/config/database'
 import { Message } from '@prisma/client'
 
@@ -8,6 +7,13 @@ interface PaginatedMessages {
   total: number
 }
 
+/**
+ * Gets the messages of a chat
+ * @param chat_id The id of the chat
+ * @param page The page number
+ * @param pageSize The number of messages per page
+ * @returns The messages and total number of messages
+ */
 export async function getChatMessages(
   chat_id: number,
   page = 1,
@@ -40,10 +46,17 @@ export async function getChatMessages(
   }
 }
 
+/**
+ * Creates a new message
+ * @param chat_id The id of the chat
+ * @param content The content of the message
+ * @param role The role of the message
+ * @returns The created message object
+ */
 export async function createMessage(
   chat_id: number,
   content: string,
-  role: 'USER' | 'BOT',
+  role: 'user' | 'assistant',
 ) {
   const prisma = getDb()
   return prisma.message.create({
@@ -53,23 +66,4 @@ export async function createMessage(
       role,
     },
   })
-}
-
-export async function getResponseFromLLM(prompt: string) {
-  // TODO: Implement actual LLM integration
-  // const response = 'Hello! This is a placeholder response.'
-  // return response
-
-  try {
-    const response = await axios.post('/generate', {
-      prompt,
-    })
-    console.log('LLM response:', response.data)
-
-    // The Flask app returns { response: string }
-    return response.data.response
-  } catch (error) {
-    console.error('Error getting LLM response:', error)
-    throw new Error('Failed to get response from LLM service')
-  }
 }

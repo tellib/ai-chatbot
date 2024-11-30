@@ -52,6 +52,6 @@ enum UserRole {
 }
 
 enum MessageRole {
-  USER
-  BOT
+  user
+  assistant
 }

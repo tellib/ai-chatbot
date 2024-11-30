@@ -27,7 +27,7 @@ export function LoginForm() {
   const { session, refreshSession } = useSession()
 
   if (session?.user) {
-    redirect('/dashboard')
+    redirect('/')
   }
 
   const FormSchema = z.object({
@@ -43,7 +43,7 @@ export function LoginForm() {
     },
   })
 
-  const handleSubmit = async (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     setLoading(true)
     const { username, password } = data
     setTimeout(async () => {
@@ -75,7 +75,7 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="username"

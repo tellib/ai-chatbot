@@ -17,6 +17,7 @@ export default function DashboardPage() {
     if (session.user) {
       fetchChats()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.user])
 
   const fetchChats = async () => {
