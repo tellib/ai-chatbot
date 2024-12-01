@@ -13,6 +13,6 @@ router.get('/', (req, res) => {
 router.use('/auth', auth)
 router.use('/user', users)
 router.use('/chat', requireUser, chats)
-router.use('/chat/:chat_id/message', requireUser, messages)
+router.use('/message', requireUser, messages)
 
 export { router }

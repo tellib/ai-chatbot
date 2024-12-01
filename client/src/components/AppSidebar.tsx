@@ -19,16 +19,15 @@ import { useSession } from '@/hooks/useSession'
 import {
   ChevronUp,
   Home,
-  LayoutDashboard,
   LogInIcon,
   LogOut,
   MoreHorizontal,
   Settings,
+  SpeechIcon,
   User2,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useEffect } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,13 +43,7 @@ export function AppSidebar() {
   const { toggleSidebar } = useSidebar()
   const isMobile = useIsMobile()
   const { session } = useSession()
-  const { chats, fetchRecentChats } = useChats()
-
-  useEffect(() => {
-    if (session?.user) {
-      fetchRecentChats()
-    }
-  }, [session?.user, fetchRecentChats])
+  const { chats } = useChats()
 
   const items = [
     {
@@ -64,9 +57,9 @@ export function AppSidebar() {
       icon: LogInIcon,
     },
     {
-      title: t('dashboard'),
-      url: '/dashboard',
-      icon: LayoutDashboard,
+      title: t('chats'),
+      url: '/chat',
+      icon: SpeechIcon,
     },
     {
       title: t('settings'),
@@ -80,7 +73,10 @@ export function AppSidebar() {
     },
   ]
 
-  const RecentChats = () => {
+  const ChatList = () => {
+    if (chats?.length === 0) {
+      return null
+    }
     return (
       <SidebarGroup>
         <SidebarGroupLabel>{t('recents')}</SidebarGroupLabel>
@@ -182,7 +178,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {chats?.length > 0 && <RecentChats />}
+        <ChatList />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

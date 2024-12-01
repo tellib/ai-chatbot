@@ -1,22 +1,19 @@
-import { getDb } from '@/config/database'
 import { model } from '@/config/gpt4all'
 import { Request, Response } from 'express'
 import { createCompletionStream } from 'gpt4all'
-import { createMessage, getChatMessages } from './service'
+import { createMessage, getContext, getMessages } from './service'
 
 /**
- * Gets the messages of a chat
+ * Gets all the messages of a chat
  */
 export const handleGetMessages = async (req: Request, res: Response) => {
   try {
     const chat_id = parseInt(req.params.chat_id)
-    const page = parseInt(req.query.page as string) || 1
-    const pageSize = parseInt(req.query.pageSize as string) || 50
 
-    const messages = await getChatMessages(chat_id, page, pageSize)
-    res.json({ success: true, data: messages })
+    const messages = await getMessages(chat_id)
+    res.json(messages)
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to fetch messages' })
+    res.status(500).end()
   }
 }
 
@@ -24,11 +21,15 @@ export const handleGetMessages = async (req: Request, res: Response) => {
  * Creates a new message
  */
 export const handleNewMessage = async (req: Request, res: Response) => {
-  const chat_id = parseInt(req.params.chat_id)
-  const { message } = req.body
+  try {
+    const chat_id = parseInt(req.params.chat_id)
+    const { content } = req.body
 
-  const newMessage = await createMessage(chat_id, message, 'user')
-  res.json({ success: true, data: newMessage })
+    const message = await createMessage(chat_id, content, 'user')
+    res.json(message)
+  } catch (error) {
+    res.status(500).end()
+  }
 }
 
 /**
@@ -40,48 +41,34 @@ export const handleGetStream = async (req: Request, res: Response) => {
   res.setHeader('Connection', 'keep-alive')
 
   const chat_id = parseInt(req.params.chat_id)
-
-  const sendSSE = (data: { data: any } | { error: string }) => {
-    res.write(`data: ${JSON.stringify(data)}\n\n`)
-  }
+  console.log('chat_id', chat_id)
 
   if (isNaN(chat_id) || chat_id <= 0) {
-    sendSSE({ error: 'Invalid chat ID' })
+    res.write(
+      `event: error\ndata: ${JSON.stringify({ error: 'Invalid chat ID' })}\n\n`,
+    )
     return res.end()
   }
 
   try {
-    const prisma = getDb()
-    const previousMessages = await prisma.message.findMany({
-      where: {
-        chat_id: chat_id,
-      },
-      orderBy: {
-        timestamp: 'asc',
-      },
-      select: {
-        content: true,
-        role: true,
-      },
-    })
+    const context = await getContext(chat_id)
 
     const chat = await model.createChatSession({
       temperature: 0.8,
       systemPrompt: '### System:\nYou are an advanced AI assistant.\n\n',
     })
 
-    const stream = createCompletionStream(chat, previousMessages)
-    let fullResponse = ''
+    const stream = createCompletionStream(chat, context)
 
+    let content = ''
     stream.tokens.on('data', (chunk) => {
-      fullResponse += chunk
-      sendSSE({
-        data: { chunk },
-      })
+      content += chunk
+      console.log('chunk', chunk)
+      res.write(`event: chunk\ndata: ${JSON.stringify({ chunk })}\n\n`)
     })
 
     await stream.result
-    await createMessage(chat_id, fullResponse, 'assistant')
+    await createMessage(chat_id, content, 'assistant')
 
     // Send done event
     res.write('event: done\ndata: {}\n\n')
@@ -89,7 +76,28 @@ export const handleGetStream = async (req: Request, res: Response) => {
     res.end()
   } catch (error) {
     console.error('Stream error:', error)
-    sendSSE({ error: 'Failed to process stream' })
+    res.write(
+      `event: error\ndata: ${JSON.stringify({ error: 'Failed to process stream' })}\n\n`,
+    )
     res.end()
   }
 }
+
+// //*
+// /* Gets paginated messages
+//  */
+// export const handleGetPaginatedMessages = async (
+//   req: Request,
+//   res: Response,
+// ) => {
+//   try {
+//     const chat_id = parseInt(req.params.chat_id)
+//     const page = parseInt(req.query.page as string) || 1
+//     const pageSize = parseInt(req.query.pageSize as string) || 50
+
+//     const messages = await getPaginatedMessages(chat_id, page, pageSize)
+//     res.json({ success: true, data: messages })
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: 'Failed to fetch messages' })
+//   }
+// }

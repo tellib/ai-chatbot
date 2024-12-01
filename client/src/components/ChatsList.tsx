@@ -7,33 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useChats } from '@/hooks/useChats'
 import { formatDate } from '@/lib/utils'
 import { MessageSquare, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-interface Chat {
-  id: number
-  title: string
-  timestamp: string
-  messages: Array<{
-    content: string
-    timestamp: string
-  }>
-}
-
-interface ChatListProps {
-  chats: Chat[]
-  onNewChat: () => Promise<void>
-}
-
-export function ChatList({ chats, onNewChat }: ChatListProps) {
+export function ChatsList() {
+  const { chats, createChat } = useChats()
   const router = useRouter()
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Your Chats</h2>
-        <Button onClick={onNewChat}>
+        <Button onClick={createChat}>
           <Plus className="mr-2" />
           New Chat
         </Button>
@@ -51,11 +37,7 @@ export function ChatList({ chats, onNewChat }: ChatListProps) {
                 {chat.title}
               </CardTitle>
               <CardDescription>
-                <span className="block">
-                  {chat.messages[0]?.content.substring(0, 100) ||
-                    'No messages yet'}
-                </span>
-                <span className="mt-2 block text-xs">
+                <span className="text-sm">
                   {formatDate(new Date(chat.timestamp))}
                 </span>
               </CardDescription>

@@ -43,7 +43,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
    */
   const clearSession = async () => {
     if (session.user) {
-      axios
+      await axios
         .get('/auth/logout')
         .then((response) => {
           console.log(response.data)
@@ -69,7 +69,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
    * Refreshes the session by calling the session endpoint and setting the session to the response
    */
   const refreshSession = async () => {
-    axios
+    await axios
       .get('/auth/session')
       .then((response) => {
         setSession(response.data)

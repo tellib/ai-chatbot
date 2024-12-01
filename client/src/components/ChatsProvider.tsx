@@ -4,20 +4,13 @@ import { useToast } from '@/hooks/use-toast'
 import { useSession } from '@/hooks/useSession'
 import axios from '@/lib/axios'
 import { Chat } from '@/types/chat'
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
+import { createContext, ReactNode, useEffect, useState } from 'react'
 
 export interface ChatContextType {
   chats: Chat[]
-  fetchChats: () => Promise<void>
-  fetchRecentChats: () => Promise<void>
-  createChat: () => Promise<Chat>
-  updateChatTitle: (chatId: number, title: string) => Promise<void>
+  getChats: () => Promise<void>
+  createChat: () => Promise<void>
+  updateChatTitle: (chat_id: number, title: string) => Promise<void>
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -29,85 +22,64 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session.user) {
-      fetchRecentChats()
+      getChats()
     } else {
       setChats([])
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.user])
 
-  const fetchChats = useCallback(async () => {
-    try {
-      const { data } = await axios.get('/chat')
-      if (data.success) {
-        setChats(data.data.chats)
-      }
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch chats',
-        variant: 'destructive',
+  const getChats = async () => {
+    await axios
+      .get('/chat')
+      .then((response) => {
+        setChats(response.data)
       })
-    }
-  }, [toast])
-
-  const fetchRecentChats = useCallback(async () => {
-    try {
-      const { data } = await axios.get('/chat/recent')
-      if (data.success) {
-        setChats(data.data)
-      }
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch recent chats',
-        variant: 'destructive',
+      .catch(() => {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch chats',
+          variant: 'destructive',
+        })
       })
-    }
-  }, [toast])
+  }
 
-  const createChat = useCallback(async () => {
-    try {
-      const { data } = await axios.post('/chat')
-      if (data.success) {
-        await fetchRecentChats()
-        return data.data
-      }
-      throw new Error('Failed to create chat')
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to create new chat',
-        variant: 'destructive',
+  const createChat = async () => {
+    await axios
+      .post('/chat')
+      .then((response) => {
+        setChats([...chats, response.data])
       })
-      throw new Error('Failed to create chat')
-    }
-  }, [fetchRecentChats, toast])
+      .catch(() => {
+        toast({
+          title: 'Error',
+          description: 'Failed to create chat',
+          variant: 'destructive',
+        })
+      })
+  }
 
-  const updateChatTitle = useCallback(
-    async (chatId: number, title: string) => {
-      try {
-        const { data } = await axios.patch(`/chat/${chatId}/title`, { title })
-        if (data.success) {
-          await fetchRecentChats()
-        }
-      } catch {
+  const updateChatTitle = async (chat_id: number, title: string) => {
+    await axios
+      .patch(`/chat/title/${chat_id}`, { title })
+      .then((response) => {
+        setChats(
+          chats.map((chat) => (chat.id === chat_id ? response.data : chat)),
+        )
+      })
+      .catch(() => {
         toast({
           title: 'Error',
           description: 'Failed to update chat title',
           variant: 'destructive',
         })
-      }
-    },
-    [fetchRecentChats, toast],
-  )
+      })
+  }
 
   return (
     <ChatContext.Provider
       value={{
         chats,
-        fetchChats,
-        fetchRecentChats,
+        getChats: getChats,
         createChat,
         updateChatTitle,
       }}

@@ -5,10 +5,13 @@ import {
   handleNewMessage,
 } from './controller'
 
-const router: Router = Router({ mergeParams: true }) // access parent route parameters
+const router: Router = Router()
 
-router.get('/', handleGetMessages)
-router.post('/', handleNewMessage as (req: Request, res: Response) => void)
-router.get('/stream', handleGetStream as (req: Request, res: Response) => void)
+router.get('/:chat_id', handleGetMessages)
+router.post('/:chat_id', handleNewMessage)
+router.get(
+  '/stream/:chat_id',
+  handleGetStream as (req: Request, res: Response) => void,
+)
 
 export const messages: Router = router
