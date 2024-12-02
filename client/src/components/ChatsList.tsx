@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardDescription,
@@ -9,35 +8,34 @@ import {
 } from '@/components/ui/card'
 import { useChats } from '@/hooks/useChats'
 import { formatDate } from '@/lib/utils'
-import { MessageSquare, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
 export function ChatsList() {
-  const { chats, createChat } = useChats()
+  const { chats } = useChats()
   const router = useRouter()
+  const t = useTranslations('navigation')
+  // Take only the first 6 chats (2x3 grid)
+  const displayedChats = chats?.slice(0, 6)
+
+  if (!displayedChats) {
+    return null
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Button onClick={createChat}>
-          <Plus className="mr-2" />
-          New Chat
-        </Button>
-      </div>
-      <div className="flex flex-col gap-4">
-        {chats.map((chat) => (
+    <>
+      <h2 className="text-2xl font-bold">{t('recent')}</h2>
+      <div className="grid grid-cols-3 gap-4">
+        {displayedChats.map((chat) => (
           <Card
             key={chat.id}
             className="cursor-pointer transition-colors hover:bg-accent/50"
             onClick={() => router.push(`/chat/${chat.id}`)}
           >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                {chat.title}
-              </CardTitle>
+              <CardTitle className="text-sm">{chat.title}</CardTitle>
               <CardDescription>
-                <span className="text-sm">
+                <span className="text-xs">
                   {formatDate(new Date(chat.timestamp))}
                 </span>
               </CardDescription>
@@ -45,6 +43,6 @@ export function ChatsList() {
           </Card>
         ))}
       </div>
-    </div>
+    </>
   )
 }

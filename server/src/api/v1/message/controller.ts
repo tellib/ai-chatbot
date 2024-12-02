@@ -1,16 +1,41 @@
 import { model } from '@/config/gpt4all'
 import { Request, Response } from 'express'
-import { createCompletionStream } from 'gpt4all'
-import { createMessage, getContext, getMessages } from './service'
+import { CompletionInput, createCompletionStream } from 'gpt4all'
+import { z } from 'zod'
+import { createMessage, getMessages, getMessagesContext } from './service'
+
+const chatIdSchema = z.object({
+  chat_id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive('Chat ID must be a positive number')),
+})
+
+const newMessageSchema = z.object({
+  chat_id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().positive()),
+  body: z.object({
+    content: z.string().min(1),
+  }),
+})
 
 /**
  * Gets all the messages of a chat
  */
 export const handleGetMessages = async (req: Request, res: Response) => {
   try {
-    const chat_id = parseInt(req.params.chat_id)
+    const result = chatIdSchema.safeParse({ chat_id: req.params.chat_id })
 
-    const messages = await getMessages(chat_id)
+    if (!result.success) {
+      return res.status(400).end()
+    }
+
+    const messages = await getMessages(
+      req.session!.user!.id,
+      result.data.chat_id,
+    )
     res.json(messages)
   } catch (error) {
     res.status(500).end()
@@ -22,10 +47,21 @@ export const handleGetMessages = async (req: Request, res: Response) => {
  */
 export const handleNewMessage = async (req: Request, res: Response) => {
   try {
-    const chat_id = parseInt(req.params.chat_id)
-    const { content } = req.body
+    const result = newMessageSchema.safeParse({
+      chat_id: req.params.chat_id,
+      body: req.body,
+    })
 
-    const message = await createMessage(chat_id, content, 'user')
+    if (!result.success) {
+      return res.status(400).end()
+    }
+
+    const message = await createMessage(
+      req.session!.user!.id,
+      result.data.chat_id,
+      result.data.body.content,
+      'user',
+    )
     res.json(message)
   } catch (error) {
     res.status(500).end()
@@ -33,17 +69,16 @@ export const handleNewMessage = async (req: Request, res: Response) => {
 }
 
 /**
- * Gets a stream of messages
+ * Gets the model's stream of messages for a chat
  */
 export const handleGetStream = async (req: Request, res: Response) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
 
-  const chat_id = parseInt(req.params.chat_id)
-  console.log('chat_id', chat_id)
+  const result = chatIdSchema.safeParse({ chat_id: req.params.chat_id })
 
-  if (isNaN(chat_id) || chat_id <= 0) {
+  if (!result.success) {
     res.write(
       `event: error\ndata: ${JSON.stringify({ error: 'Invalid chat ID' })}\n\n`,
     )
@@ -51,28 +86,33 @@ export const handleGetStream = async (req: Request, res: Response) => {
   }
 
   try {
-    const context = await getContext(chat_id)
+    const context = await getMessagesContext(
+      req.session!.user!.id,
+      result.data.chat_id,
+    )
 
     const chat = await model.createChatSession({
       temperature: 0.8,
       systemPrompt: '### System:\nYou are an advanced AI assistant.\n\n',
     })
 
-    const stream = createCompletionStream(chat, context)
+    const stream = createCompletionStream(chat, context as CompletionInput)
 
     let content = ''
     stream.tokens.on('data', (chunk) => {
       content += chunk
-      console.log('chunk', chunk)
       res.write(`event: chunk\ndata: ${JSON.stringify({ chunk })}\n\n`)
     })
 
     await stream.result
-    await createMessage(chat_id, content, 'assistant')
+    const message = await createMessage(
+      req.session!.user!.id,
+      result.data.chat_id,
+      content,
+      'assistant',
+    )
 
-    // Send done event
-    res.write('event: done\ndata: {}\n\n')
-
+    res.write(`event: done\ndata: ${JSON.stringify({ message })}\n\n`)
     res.end()
   } catch (error) {
     console.error('Stream error:', error)
@@ -82,22 +122,3 @@ export const handleGetStream = async (req: Request, res: Response) => {
     res.end()
   }
 }
-
-// //*
-// /* Gets paginated messages
-//  */
-// export const handleGetPaginatedMessages = async (
-//   req: Request,
-//   res: Response,
-// ) => {
-//   try {
-//     const chat_id = parseInt(req.params.chat_id)
-//     const page = parseInt(req.query.page as string) || 1
-//     const pageSize = parseInt(req.query.pageSize as string) || 50
-
-//     const messages = await getPaginatedMessages(chat_id, page, pageSize)
-//     res.json({ success: true, data: messages })
-//   } catch (error) {
-//     res.status(500).json({ success: false, error: 'Failed to fetch messages' })
-//   }
-// }

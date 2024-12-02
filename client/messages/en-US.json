@@ -16,7 +16,7 @@
     "signup": "Signup",
     "chats": "Chats",
     "test": "Test",
-    "recents": "Recent Chats",
+    "recent": "Recent Chats",
     "settings": "Settings",
     "logout": "Logout"
   },

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +45,7 @@ export function AppSidebar() {
   const isMobile = useIsMobile()
   const { session } = useSession()
   const { chats } = useChats()
+  const router = useRouter()
 
   const items = [
     {
@@ -74,12 +76,12 @@ export function AppSidebar() {
   ]
 
   const ChatList = () => {
-    if (chats?.length === 0) {
+    if (!chats) {
       return null
     }
     return (
       <SidebarGroup>
-        <SidebarGroupLabel>{t('recents')}</SidebarGroupLabel>
+        <SidebarGroupLabel>{t('recent')}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {chats?.map((chat) => (

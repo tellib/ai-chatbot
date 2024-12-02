@@ -7,24 +7,31 @@ import { Chat } from '@/types/chat'
 import { createContext, ReactNode, useEffect, useState } from 'react'
 
 export interface ChatContextType {
-  chats: Chat[]
+  chats: Chat[] | null
   getChats: () => Promise<void>
-  createChat: () => Promise<void>
+  createChat: (content: string) => Promise<Chat>
   updateChatTitle: (chat_id: number, title: string) => Promise<void>
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatsProvider({ children }: { children: ReactNode }) {
-  const [chats, setChats] = useState<Chat[]>([])
+  const [chats, setChats] = useState<Chat[] | null>(null)
+
   const { toast } = useToast()
   const { session } = useSession()
 
   useEffect(() => {
     if (session.user) {
-      getChats()
-    } else {
-      setChats([])
+      try {
+        getChats()
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch chats',
+          variant: 'destructive',
+        })
+      }
     }
   }, [session.user])
 
@@ -34,27 +41,23 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       .then((response) => {
         setChats(response.data)
       })
-      .catch(() => {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch chats',
-          variant: 'destructive',
-        })
+      .catch((error) => {
+        throw error
       })
   }
 
-  const createChat = async () => {
-    await axios
-      .post('/chat')
+  const createChat = async (content: string): Promise<Chat> => {
+    return await axios
+      .post('/chat', { content })
       .then((response) => {
-        setChats([...chats, response.data])
-      })
-      .catch(() => {
-        toast({
-          title: 'Error',
-          description: 'Failed to create chat',
-          variant: 'destructive',
+        setChats((prev) => {
+          if (!prev) return prev
+          return [response.data, ...prev]
         })
+        return response.data
+      })
+      .catch((error) => {
+        throw error
       })
   }
 
@@ -62,16 +65,15 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
     await axios
       .patch(`/chat/title/${chat_id}`, { title })
       .then((response) => {
-        setChats(
-          chats.map((chat) => (chat.id === chat_id ? response.data : chat)),
-        )
-      })
-      .catch(() => {
-        toast({
-          title: 'Error',
-          description: 'Failed to update chat title',
-          variant: 'destructive',
+        setChats((prev) => {
+          if (!prev) return prev
+          return prev.map((chat) =>
+            chat.id === chat_id ? response.data : chat,
+          )
         })
+      })
+      .catch((error) => {
+        throw error
       })
   }
 

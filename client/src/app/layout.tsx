@@ -2,6 +2,7 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { ChatsProvider } from '@/components/ChatsProvider'
 import { SessionProvider } from '@/components/SessionProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
@@ -51,7 +52,8 @@ export default async function RootLayout({
                 <SidebarProvider>
                   <AppSidebar />
                   {children}
-                  {/* <ThemeToggle /> */}
+                  <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(50,119,230,0.3),rgba(255,255,255,0))] dark:bg-black"></div>
+                  <ThemeToggle />
                   {/* <LocaleToggle /> */}
                 </SidebarProvider>
               </NextIntlClientProvider>

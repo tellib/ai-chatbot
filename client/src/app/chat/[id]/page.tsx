@@ -1,26 +1,19 @@
 'use client'
 
-import { ChatView } from '@/components/ChatView'
+import { MessagesInput } from '@/components/MessagesInput'
 import { MessagesProvider } from '@/components/MessagesProvider'
-import { useSession } from '@/hooks/useSession'
+import { MessagesView } from '@/components/MessagesView'
 import { useParams } from 'next/navigation'
 
 export default function ChatPage() {
-  const { session } = useSession()
-  const params = useParams()
-  const id = parseInt(params.id as string)
-
-  if (!session.user) {
-    return (
-      <div className="mx-auto my-auto p-4">
-        <p>Loading...</p>
-      </div>
-    )
-  }
+  const params = useParams<{ id: string }>()
 
   return (
-    <MessagesProvider chat_id={id}>
-      <ChatView />
+    <MessagesProvider chat_id={params.id}>
+      <div className="mx-auto flex h-screen w-full flex-col">
+        <MessagesView />
+        <MessagesInput />
+      </div>
     </MessagesProvider>
   )
 }

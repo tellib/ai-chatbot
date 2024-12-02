@@ -49,7 +49,7 @@ export const requireUser = (
   next: NextFunction,
 ): void => {
   if (!req.session?.user) {
-    res.status(401).json({ message: 'Unauthorized' })
+    res.status(401).end()
     return
   }
   next()
@@ -61,7 +61,7 @@ export const isAdmin = (
   next: NextFunction,
 ): void => {
   if (req.session?.user?.role !== 'ADMIN') {
-    res.status(403).json({ message: 'Forbidden' })
+    res.status(403).end()
     return
   }
   next()

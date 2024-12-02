@@ -1,7 +1,10 @@
 'use client'
 
+import { useToast } from '@/hooks/use-toast'
+import { useChats } from '@/hooks/useChats'
 import { createLengthValidator } from '@/lib/validators'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -11,20 +14,45 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from './ui/form'
 import { Textarea } from './ui/textarea'
 
 export function NewChat() {
+  const { createChat } = useChats()
+
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
+
   const formSchema = z.object({
-    message: createLengthValidator(1, 4096, 'Message is required'),
+    content: createLengthValidator(1, 4096, 'Message is required'),
   })
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      message: '',
+      content: '',
     },
   })
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      form.handleSubmit(onSubmit)()
+    }
+  }
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    console.log(data)
+    try {
+      setLoading(true)
+      await createChat(data.content).then((chat) => {
+        router.push(`/chat/${chat.id}`)
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create chat',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,11 +65,11 @@ export function NewChat() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="message"
+              name="content"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} onKeyDown={handleKeyDown} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
