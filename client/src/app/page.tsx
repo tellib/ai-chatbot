@@ -34,8 +34,10 @@ export default async function Home() {
           Server:{' '}
           <span
             className={cn(
-              'text-sm',
-              status === 'Online' ? 'text-green-500' : 'text-red-500',
+              'text-sm font-bold',
+              status === 'Online'
+                ? 'animate-pulse text-green-500'
+                : 'text-red-500',
             )}
           >
             {status}

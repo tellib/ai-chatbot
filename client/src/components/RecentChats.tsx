@@ -18,12 +18,12 @@ export function RecentChats() {
     return null
   }
 
-  const displayedChats = chats?.slice(0, 6)
+  const displayedChats = chats?.slice(0, 4)
 
   return (
     <>
       <h2 className="text-2xl font-bold">Recent Chats</h2>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="flex flex-col gap-2">
         {displayedChats.map((chat) => (
           <Card
             key={chat.id}
