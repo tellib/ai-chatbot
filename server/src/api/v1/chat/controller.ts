@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { z } from 'zod'
 import { createChat, getChats, updateChatTitle } from './service'
 
-// Define validation schemas
+// validation schemas
 const createChatSchema = z.object({
   content: z.string().min(1).max(4096),
 })
@@ -16,7 +16,7 @@ const updateTitleSchema = z.object({
  */
 export const handleGetChats = async (req: Request, res: Response) => {
   try {
-    const chats = await getChats(req.session!.user!.id)
+    const chats = await getChats(req.session!.user!.id!)
     res.json(chats)
   } catch (error) {
     res.status(500).end()
@@ -29,12 +29,9 @@ export const handleGetChats = async (req: Request, res: Response) => {
 export const handleCreateChat = async (req: Request, res: Response) => {
   try {
     const result = createChatSchema.safeParse(req.body)
+    if (!result.success) return res.status(400).end()
 
-    if (!result.success) {
-      return res.status(400).end()
-    }
-
-    const chat = await createChat(req.session!.user!.id, result.data.content)
+    const chat = await createChat(req.session!.user!.id!, result.data.content)
     res.json(chat)
   } catch (error) {
     res.status(500).end()
@@ -47,13 +44,10 @@ export const handleCreateChat = async (req: Request, res: Response) => {
 export const handleUpdateTitle = async (req: Request, res: Response) => {
   try {
     const result = updateTitleSchema.safeParse(req.body)
-
-    if (!result.success) {
-      return res.status(400).end()
-    }
+    if (!result.success) return res.status(400).end()
 
     const chat = await updateChatTitle(
-      req.session!.user!.id,
+      req.session!.user!.id!,
       parseInt(req.params.chat_id),
       result.data.title,
     )

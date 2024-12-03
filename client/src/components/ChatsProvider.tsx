@@ -4,12 +4,13 @@ import { useToast } from '@/hooks/use-toast'
 import { useSession } from '@/hooks/useSession'
 import axios from '@/lib/axios'
 import { Chat } from '@/types/chat'
+import { useRouter } from 'next/navigation'
 import { createContext, ReactNode, useEffect, useState } from 'react'
 
 export interface ChatContextType {
   chats: Chat[] | null
   getChats: () => Promise<void>
-  createChat: (content: string) => Promise<Chat>
+  createChat: (content: string) => Promise<void>
   updateChatTitle: (chat_id: number, title: string) => Promise<void>
 }
 
@@ -17,23 +18,18 @@ export const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatsProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<Chat[] | null>(null)
+  const router = useRouter()
 
   const { toast } = useToast()
   const { session } = useSession()
 
   useEffect(() => {
     if (session.user) {
-      try {
-        getChats()
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch chats',
-          variant: 'destructive',
-        })
-      }
+      getChats()
+    } else {
+      setChats(null)
     }
-  }, [session.user])
+  }, [session])
 
   const getChats = async () => {
     await axios
@@ -42,11 +38,18 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         setChats(response.data)
       })
       .catch((error) => {
-        throw error
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch chats',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
       })
   }
 
-  const createChat = async (content: string): Promise<Chat> => {
+  const createChat = async (content: string): Promise<void> => {
     return await axios
       .post('/chat', { content })
       .then((response) => {
@@ -54,10 +57,17 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
           if (!prev) return prev
           return [response.data, ...prev]
         })
-        return response.data
+        router.push(`/chat/${response.data.id}`)
       })
       .catch((error) => {
-        throw error
+        toast({
+          title: 'Error',
+          description: 'Failed to create chat',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
       })
   }
 
@@ -73,7 +83,14 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         })
       })
       .catch((error) => {
-        throw error
+        toast({
+          title: 'Error',
+          description: 'Failed to update chat title',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
       })
   }
 

@@ -1,6 +1,6 @@
 import { JWT_SECRET } from '@/config/environment'
-import { User } from '@/types/user'
 import { decryptToken } from '@/utils/tokens'
+import { User } from '@prisma/client'
 import { NextFunction, Request, Response } from 'express'
 import { jwtVerify } from 'jose'
 import { JWTExpired, JWTInvalid } from 'jose/errors'
@@ -22,13 +22,8 @@ export const getSessionFromToken = async (
       const decryptedToken = decryptToken(token)
       const { payload } = await jwtVerify(decryptedToken, secret)
       req.session = {
-        user: {
-          id: parseInt(payload?.id as string),
-          username: payload?.username as string,
-          email: payload?.email as string,
-          role: payload?.role as string,
-        } as User,
-        token: token,
+        user: payload as Partial<User>,
+        token,
       }
     } catch (error) {
       if (error instanceof JWTExpired || error instanceof JWTInvalid) {

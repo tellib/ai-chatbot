@@ -2,6 +2,7 @@
 
 import { toast } from '@/hooks/use-toast'
 import { useMessages } from '@/hooks/useMessages'
+import { useSession } from '@/hooks/useSession'
 import { Message } from '@/types/message'
 import { CopyIcon, LoaderCircle } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -9,11 +10,14 @@ import ReactMarkdown from 'react-markdown'
 import { Button } from './ui/button'
 
 export function MessagesView() {
+  const { session } = useSession()
   const { messages } = useMessages()
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   const renderMessage = (message: Message) => {
@@ -21,10 +25,10 @@ export function MessagesView() {
     return (
       <div
         key={message.timestamp}
-        className={`mx-auto rounded-2xl px-6 py-4 ${
+        className={`mx-auto w-full max-w-full rounded-2xl px-6 py-4 md:max-w-md lg:max-w-2xl ${
           isUser
-            ? 'w-full max-w-full bg-primary-foreground shadow-sm ring-1 ring-inset ring-primary/10 lg:max-w-xl'
-            : 'w-full max-w-full lg:max-w-xl'
+            ? 'bg-primary-foreground shadow-sm ring-1 ring-inset ring-primary/10'
+            : ''
         }`}
       >
         {isUser ? (
@@ -76,19 +80,12 @@ export function MessagesView() {
     )
   }
 
-  if (!messages) {
+  if (messages && messages.length > 0)
     return (
-      <div className="mx-auto my-auto p-4">
-        <p>No messages found</p>
+      <div className="h-full space-y-4 overflow-y-auto p-6 pt-24">
+        {messages.map(renderMessage)}
+        {/* Invisible div for scrolling */}
+        <div ref={endRef} />
       </div>
     )
-  }
-
-  return (
-    <div className="h-full space-y-4 overflow-y-auto p-6">
-      {messages.map(renderMessage)}
-      {/* Invisible div for scrolling */}
-      <div ref={endRef} />
-    </div>
-  )
 }

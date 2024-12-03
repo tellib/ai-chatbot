@@ -32,15 +32,9 @@ export function MessagesProvider({
 
   useEffect(() => {
     if (session.user) {
-      try {
-        getMessages()
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch chats',
-          variant: 'destructive',
-        })
-      }
+      getMessages()
+    } else {
+      setMessages(null)
     }
   }, [session.user])
 
@@ -57,7 +51,14 @@ export function MessagesProvider({
         }
       })
       .catch((error) => {
-        throw error
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch chats',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
       })
   }
 
@@ -75,7 +76,14 @@ export function MessagesProvider({
         streamMessage()
       })
       .catch((error) => {
-        throw error
+        toast({
+          title: 'Error',
+          description: 'Failed to create message',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
       })
   }
 
@@ -115,7 +123,6 @@ export function MessagesProvider({
         return
       }
 
-      // Accumulate content and update the last message
       accumulatedContent += data.chunk
       setMessages((prev) => {
         if (!prev) return prev
@@ -125,9 +132,17 @@ export function MessagesProvider({
       })
     })
 
-    eventSource.addEventListener('error', () => {
-      console.error('SSE Error')
+    eventSource.addEventListener('error', (event) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to stream message',
+        variant: 'destructive',
+      })
+      if (process.env.NODE_ENV === 'development') {
+        console.error(event)
+      }
       eventSource.close()
+      setLoading(false)
     })
 
     eventSource.addEventListener('done', (event) => {
@@ -140,8 +155,8 @@ export function MessagesProvider({
         lastMessage.timestamp = data.message.timestamp
         return [...prev]
       })
+      setLoading(false)
     })
-    setLoading(false)
   }
 
   return (

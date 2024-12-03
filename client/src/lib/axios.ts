@@ -6,6 +6,7 @@ const instance = axios.create({
   withCredentials: true,
 })
 
+// provide the token to the request headers
 instance.interceptors.request.use(async (config) => {
   const token = await getCookie('token')
   if (token) {
@@ -13,5 +14,16 @@ instance.interceptors.request.use(async (config) => {
   }
   return config
 })
+
+// handle token expiration by redirecting to the login page
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  },
+)
 
 export default instance

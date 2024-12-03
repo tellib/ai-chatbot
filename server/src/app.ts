@@ -19,7 +19,7 @@ app.use(cookieParser())
 app.use(getSessionFromToken)
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(
-    `${new Date().toISOString()}: ${req.method} ${req.url} - ${req.session?.user?.id || 'no user'}`,
+    `${new Date().toISOString()}, ${req.method}, ${req.url}, ${req.session?.user?.id || 'NO USER'}`,
   )
   next()
 })

@@ -11,4 +11,3 @@ export const TOKEN_EXPIRE_TIME = process.env.TOKEN_EXPIRE_TIME || '1h'
 export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'
 export const COOKIE_ENCRYPTION_KEY =
   process.env.COOKIE_ENCRYPTION_KEY || 'your-32-char-secret-key-here'
-export const LLM_API_URL = process.env.LLM_API_URL || 'http://127.0.0.1:5000'

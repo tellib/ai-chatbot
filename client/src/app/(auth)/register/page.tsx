@@ -1,5 +1,4 @@
 import { RegisterForm } from '@/components/RegisterForm'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import {
   Card,
   CardContent,
@@ -14,7 +13,7 @@ export default async function RegisterPage() {
   const t = await getTranslations('auth')
 
   return (
-    <main className="mx-auto my-auto gap-8">
+    <main className="m-auto">
       <Card className="w-96">
         <CardHeader>
           <CardTitle>{t('signup')}</CardTitle>
@@ -28,7 +27,6 @@ export default async function RegisterPage() {
           <RegisterForm />
         </CardContent>
       </Card>
-      <ThemeToggle />
     </main>
   )
 }

@@ -1,8 +1,8 @@
 import { AppSidebar } from '@/components/AppSidebar'
 import { ChatsProvider } from '@/components/ChatsProvider'
+import FloatingNav from '@/components/FloatingNav'
 import { SessionProvider } from '@/components/SessionProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
@@ -36,9 +36,7 @@ export default async function RootLayout({
   const messages = await getMessages()
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider>
           <ChatsProvider>
             <Toaster />
@@ -52,9 +50,8 @@ export default async function RootLayout({
                 <SidebarProvider>
                   <AppSidebar />
                   {children}
-                  <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(50,119,230,0.3),rgba(255,255,255,0))] dark:bg-black"></div>
-                  <ThemeToggle />
-                  {/* <LocaleToggle /> */}
+                  <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(50,119,230,0.1),rgba(50,119,230,0.2))] dark:bg-black"></div>
+                  <FloatingNav />
                 </SidebarProvider>
               </NextIntlClientProvider>
             </ThemeProvider>

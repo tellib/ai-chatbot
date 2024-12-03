@@ -9,26 +9,18 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form'
-import { useToast } from '@/hooks/use-toast'
 import { useSession } from '@/hooks/useSession'
-import axios from '@/lib/axios'
 import { createLengthValidator } from '@/lib/validators'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { redirect } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 export function RegisterForm() {
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
   const t = useTranslations('auth')
-  const { session, refreshSession } = useSession()
-
-  if (session?.user) {
-    redirect('/')
-  }
+  const { register } = useSession()
 
   const FormSchema = z.object({
     username: createLengthValidator(2, 50, t('requirements.username')),
@@ -45,32 +37,8 @@ export function RegisterForm() {
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     setLoading(true)
-    const { username, password } = data
-    setTimeout(async () => {
-      try {
-        const response = await axios.post('/auth/signup', {
-          username,
-          password,
-        })
-        if (response.status === 201) {
-          await refreshSession()
-          toast({
-            title: t('success.signup'),
-            duration: 1000,
-          })
-        } else {
-          throw new Error()
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        toast({
-          title: t('error.signup'),
-          variant: 'destructive',
-        })
-      } finally {
-        setLoading(false)
-      }
-    }, 1000)
+    await register(data.username, data.password)
+    setLoading(false)
   }
 
   return (

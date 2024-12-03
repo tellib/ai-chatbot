@@ -6,21 +6,17 @@ import { Textarea } from './ui/textarea'
 
 export function MessagesInput() {
   const [input, setInput] = useState('')
-  const { messages, createMessage, loading } = useMessages()
+  const { createMessage, loading, messages } = useMessages()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus()
-    }
+    textareaRef?.current?.focus()
   }, [])
 
   const onSubmit = async () => {
     if (!input.trim() || loading) return
-
-    await createMessage(input.trim()).then(() => {
-      setInput('')
-    })
+    await createMessage(input.trim())
+    setInput('')
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -33,7 +29,7 @@ export function MessagesInput() {
   if (!messages) return null
 
   return (
-    <div className="flex gap-4 bg-transparent px-4 pb-4">
+    <div className="flex gap-4 border-t border-foreground/10 bg-background/50 p-4">
       <Textarea
         ref={textareaRef}
         value={input}
@@ -42,12 +38,7 @@ export function MessagesInput() {
         placeholder="Type your message..."
         className="resize-none"
       />
-      <Button
-        variant="outline"
-        className="h-full w-12"
-        onClick={onSubmit}
-        disabled={loading}
-      >
+      <Button className="h-full w-16" onClick={onSubmit} disabled={loading}>
         <SendHorizontal />
       </Button>
     </div>

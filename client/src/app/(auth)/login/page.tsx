@@ -1,5 +1,4 @@
 import { LoginForm } from '@/components/LoginForm'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import {
   Card,
   CardContent,
@@ -14,7 +13,7 @@ export default async function LoginPage() {
   const t = await getTranslations('auth')
 
   return (
-    <main className="mx-auto my-auto gap-8">
+    <main className="m-auto">
       <Card className="w-96">
         <CardHeader>
           <CardTitle>{t('login')}</CardTitle>
@@ -31,7 +30,6 @@ export default async function LoginPage() {
           <LoginForm />
         </CardContent>
       </Card>
-      <ThemeToggle />
     </main>
   )
 }

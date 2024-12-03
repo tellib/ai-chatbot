@@ -20,15 +20,13 @@ import {
   ChevronUp,
   Home,
   LogInIcon,
-  LogOut,
   MoreHorizontal,
-  Settings,
   SpeechIcon,
   User2,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,9 +41,10 @@ export function AppSidebar() {
   const t = useTranslations('navigation')
   const { toggleSidebar } = useSidebar()
   const isMobile = useIsMobile()
-  const { session } = useSession()
+  const { session, logout } = useSession()
   const { chats } = useChats()
   const router = useRouter()
+  const pathname = usePathname()
 
   const items = [
     {
@@ -54,29 +53,46 @@ export function AppSidebar() {
       icon: Home,
     },
     {
-      title: t('login'),
-      url: '/login',
-      icon: LogInIcon,
-    },
-    {
       title: t('chats'),
       url: '/chat',
       icon: SpeechIcon,
     },
-    {
-      title: t('settings'),
-      url: '/settings',
-      icon: Settings,
-    },
-    {
-      title: t('logout'),
-      url: '/logout',
-      icon: LogOut,
-    },
   ]
 
-  const ChatList = () => {
-    if (!chats) {
+  const MenuGroup = () => {
+    return (
+      <SidebarGroup>
+        <SidebarGroupLabel>{t('title')}</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {items.map((item) => {
+              const isActive =
+                item.url === '/chat'
+                  ? pathname === '/chat' || pathname.startsWith('/chat/')
+                  : pathname === item.url
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => isMobile && toggleSidebar()}
+                    asChild
+                    isActive={isActive}
+                  >
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  }
+
+  const ChatGroup = () => {
+    if (!chats || chats.length === 0) {
       return null
     }
     return (
@@ -84,30 +100,37 @@ export function AppSidebar() {
         <SidebarGroupLabel>{t('recent')}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {chats?.map((chat) => (
-              <SidebarMenuItem key={chat.id}>
-                <SidebarMenuButton asChild>
-                  <Link href={`/chat/${chat.id}`}>
-                    <span>{chat.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuAction>
-                      <MoreHorizontal />
-                    </SidebarMenuAction>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="bottom" align="start">
-                    <DropdownMenuItem>
-                      <span>Rename</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span>Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            ))}
+            {chats?.map((chat) => {
+              const isActive = pathname === `/chat/${chat.id}`
+              return (
+                <SidebarMenuItem key={chat.id}>
+                  <SidebarMenuButton
+                    asChild
+                    onClick={() => isMobile && toggleSidebar()}
+                    isActive={isActive}
+                  >
+                    <Link href={`/chat/${chat.id}`}>
+                      <span>{chat.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuAction>
+                        <MoreHorizontal />
+                      </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="bottom" align="start">
+                      <DropdownMenuItem>
+                        <span>Rename</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -115,6 +138,16 @@ export function AppSidebar() {
   }
 
   const UserMenu = () => {
+    if (!session?.user) {
+      return (
+        <SidebarMenuButton asChild>
+          <Link href="/login">
+            <LogInIcon />
+            <span>Login</span>
+          </Link>
+        </SidebarMenuButton>
+      )
+    }
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -130,62 +163,31 @@ export function AppSidebar() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/account')}>
               <span>Account</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/settings')}>
               <span>Settings</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <span>Sign out</span>
+          <DropdownMenuItem onClick={logout}>
+            <span>Logout</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
   }
-
-  const LoginMenu = () => {
-    return (
-      <SidebarMenuButton asChild>
-        <Link href="/login">
-          <LogInIcon />
-          <span>Login</span>
-        </Link>
-      </SidebarMenuButton>
-    )
-  }
-
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('title')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    onClick={() => isMobile && toggleSidebar()}
-                    asChild
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <ChatList />
+        <MenuGroup />
+        <ChatGroup />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            {session?.user ? <UserMenu /> : <LoginMenu />}
+            <UserMenu />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -1,13 +1,19 @@
-import { ChatsList } from '@/components/ChatsList'
 import { NewChat } from '@/components/NewChat'
+import { RecentChats } from '@/components/RecentChats'
 import { getTranslations } from 'next-intl/server'
 
 export default async function ChatsPage() {
   const t = await getTranslations('navigation')
   return (
-    <div className="m-auto space-y-4 p-4">
+    <div className="w-lg m-auto flex max-w-lg flex-col gap-8 p-4">
+      <h1 className="text-center text-3xl font-semibold">
+        What can I help with?
+      </h1>
       <NewChat />
-      <ChatsList />
+      <div className="flex flex-col gap-2">
+        <h2 className="text-2xl font-bold">{t('recent')}</h2>
+        <RecentChats />
+      </div>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { Request, Response } from 'express'
 import { z } from 'zod'
 import { checkExistingUser, createUser, verifyUserCredentials } from './service'
 
+// validation schemas
 const userSchema = z.object({
   username: z.string().min(2).max(50),
   password: z.string().min(6).max(50),
@@ -16,7 +17,11 @@ export const handleGetSession = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  res.json(req.session)
+  try {
+    res.json(req.session)
+  } catch (error) {
+    res.status(500).end()
+  }
 }
 
 /**
@@ -35,16 +40,17 @@ export const handleLogin = async (
     }
 
     const { username, password } = result.data
-
     const user = await verifyUserCredentials(username, password)
     if (!user) {
-      res.status(401).end()
+      res.status(400).end()
       return
     }
 
     const token = await createToken(user)
     const encryptedToken = encryptToken(token)
-    res.cookie('token', encryptedToken, cookieConfig).end()
+
+    req.session = { user, token: encryptedToken }
+    res.cookie('token', encryptedToken, cookieConfig).json(req.session)
   } catch (error) {
     res.status(500).end()
   }
@@ -95,7 +101,12 @@ export const handleRegister = async (
 
     const token = await createToken(user)
     const encryptedToken = encryptToken(token)
-    res.status(201).cookie('token', encryptedToken, cookieConfig).end()
+
+    req.session = { user, token: encryptedToken }
+    res
+      .status(201)
+      .cookie('token', encryptedToken, cookieConfig)
+      .json(req.session)
   } catch (error) {
     res.status(500).end()
   }

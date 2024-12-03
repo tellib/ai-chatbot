@@ -1,4 +1,8 @@
-import { COOKIE_ENCRYPTION_KEY, JWT_SECRET } from '@/config/environment'
+import {
+  COOKIE_ENCRYPTION_KEY,
+  JWT_SECRET,
+  TOKEN_EXPIRE_TIME,
+} from '@/config/environment'
 import crypto from 'crypto'
 import { SignJWT } from 'jose'
 
@@ -38,6 +42,6 @@ export async function createToken(payload: any): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime(TOKEN_EXPIRE_TIME)
     .sign(new TextEncoder().encode(JWT_SECRET))
 }
