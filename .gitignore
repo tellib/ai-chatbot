@@ -2,10 +2,19 @@
 */node_modules
 */public
 
-.env
-.env.local
+# Environment
+*.env
+!*.env.sample
+!*.env.local.sample
 
+# Node
 package-lock.json
 
-__pycache__
+# Model
 *.gguf
+
+# production
+/build
+
+# misc
+.DS_Store
