@@ -50,7 +50,7 @@ export default async function RootLayout({
                 <SidebarProvider>
                   <AppSidebar />
                   {children}
-                  <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(50,119,230,0.1),rgba(50,119,230,0.2))] dark:bg-black"></div>
+                  <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(50,119,230,0.2),rgba(50,119,230,0.01))] dark:bg-black"></div>
                   <FloatingNav />
                 </SidebarProvider>
               </NextIntlClientProvider>

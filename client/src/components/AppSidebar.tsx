@@ -8,7 +8,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -16,14 +15,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useChats } from '@/hooks/useChats'
 import { useSession } from '@/hooks/useSession'
-import {
-  ChevronUp,
-  Home,
-  LogInIcon,
-  MoreHorizontal,
-  SpeechIcon,
-  User2,
-} from 'lucide-react'
+import { ChevronUp, Home, LogInIcon, SpeechIcon, User2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -42,7 +34,7 @@ export function AppSidebar() {
   const { toggleSidebar } = useSidebar()
   const isMobile = useIsMobile()
   const { session, logout } = useSession()
-  const { chats } = useChats()
+  const { chats, deleteChat } = useChats()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -113,7 +105,7 @@ export function AppSidebar() {
                       <span>{chat.title}</span>
                     </Link>
                   </SidebarMenuButton>
-                  <DropdownMenu>
+                  {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <SidebarMenuAction>
                         <MoreHorizontal />
@@ -123,11 +115,11 @@ export function AppSidebar() {
                       <DropdownMenuItem>
                         <span>Rename</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => deleteChat(chat.id)}>
                         <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                  </DropdownMenu> */}
                 </SidebarMenuItem>
               )
             })}
@@ -141,7 +133,7 @@ export function AppSidebar() {
     if (!session?.user) {
       return (
         <SidebarMenuButton asChild>
-          <Link href="/login">
+          <Link href="/login" onClick={() => isMobile && toggleSidebar()}>
             <LogInIcon />
             <span>Login</span>
           </Link>
@@ -163,15 +155,25 @@ export function AppSidebar() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => router.push('/account')}>
+            <DropdownMenuItem
+              onClick={() => {
+                router.push('/account')
+                isMobile && toggleSidebar()
+              }}
+            >
               <span>Account</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')}>
+            {/* <DropdownMenuItem onClick={() => router.push('/settings')}>
               <span>Settings</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout}>
+          <DropdownMenuItem
+            onClick={() => {
+              logout()
+              isMobile && toggleSidebar()
+            }}
+          >
             <span>Logout</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

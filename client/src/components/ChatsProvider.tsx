@@ -12,6 +12,7 @@ export interface ChatContextType {
   getChats: () => Promise<void>
   createChat: (content: string) => Promise<void>
   updateChatTitle: (chat_id: number, title: string) => Promise<void>
+  deleteChat: (chat_id: number) => Promise<void>
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -94,6 +95,27 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
       })
   }
 
+  const deleteChat = async (chat_id: number) => {
+    await axios
+      .delete(`/chat/delete/${chat_id}`)
+      .then(() => {
+        setChats((prev) => {
+          if (!prev) return prev
+          return prev.filter((chat) => chat.id !== chat_id)
+        })
+      })
+      .catch((error) => {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete chat',
+          variant: 'destructive',
+        })
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error)
+        }
+      })
+  }
+
   return (
     <ChatContext.Provider
       value={{
@@ -101,6 +123,7 @@ export function ChatsProvider({ children }: { children: ReactNode }) {
         getChats: getChats,
         createChat,
         updateChatTitle,
+        deleteChat,
       }}
     >
       {children}

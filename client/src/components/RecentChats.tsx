@@ -21,23 +21,26 @@ export function RecentChats() {
   const displayedChats = chats?.slice(0, 6)
 
   return (
-    <div className="grid grid-cols-3 gap-4">
-      {displayedChats.map((chat) => (
-        <Card
-          key={chat.id}
-          className="cursor-pointer transition-colors hover:bg-accent/50"
-          onClick={() => router.push(`/chat/${chat.id}`)}
-        >
-          <CardHeader>
-            <CardTitle className="truncate text-sm">{chat.title}</CardTitle>
-            <CardDescription>
-              <span className="text-xs">
-                {formatDate(new Date(chat.timestamp))}
-              </span>
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      ))}
-    </div>
+    <>
+      <h2 className="text-2xl font-bold">Recent Chats</h2>
+      <div className="grid grid-cols-3 gap-4">
+        {displayedChats.map((chat) => (
+          <Card
+            key={chat.id}
+            className="cursor-pointer transition-colors hover:bg-accent/50"
+            onClick={() => router.push(`/chat/${chat.id}`)}
+          >
+            <CardHeader>
+              <CardTitle className="truncate text-sm">{chat.title}</CardTitle>
+              <CardDescription>
+                <span className="text-xs">
+                  {formatDate(new Date(chat.timestamp))}
+                </span>
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+    </>
   )
 }

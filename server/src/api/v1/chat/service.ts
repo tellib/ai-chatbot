@@ -75,28 +75,47 @@ export async function getChats(user_id: number) {
   return chats
 }
 
-/**
- * Updates the title of a chat
- * @param user_id The id of the user
- * @param chat_id The id of the chat
- * @param title The new title of the chat
- * @returns The updated chat object
- * @throws Error if the chat update fails
- */
-export async function updateChatTitle(
-  user_id: number,
-  chat_id: number,
-  title: string,
-) {
-  const prisma = getDb()
-  const chat = await prisma.chat.update({
-    where: { id: chat_id, user_id },
-    data: { title },
-  })
+// TODO: implement chat title update
+// /**
+//  * Updates the title of a chat
+//  * @param user_id The id of the user
+//  * @param chat_id The id of the chat
+//  * @param title The new title of the chat
+//  * @returns The updated chat object
+//  * @throws Error if the chat update fails
+//  */
+// export async function updateChatTitle(
+//   user_id: number,
+//   chat_id: number,
+//   title: string,
+// ) {
+//   const prisma = getDb()
+//   const chat = await prisma.chat.update({
+//     where: { id: chat_id, user_id },
+//     data: { title },
+//   })
 
-  if (!chat) {
-    throw new Error('Failed to update chat title')
-  }
+//   if (!chat) {
+//     throw new Error('Failed to update chat title')
+//   }
 
-  return chat
-}
+//   return chat
+// }
+
+// TODO: implement chat deletion
+// /**
+//  * Deletes a chat
+//  * @param user_id The id of the user
+//  * @param chat_id The id of the chat
+//  * @returns The id of the deleted chat
+//  * @throws Error if the chat deletion fails
+//  */
+// export async function deleteChat(user_id: number, chat_id: number) {
+//   const prisma = getDb()
+//   const chat = await prisma.chat.update({
+//     where: { id: chat_id, user_id },
+//     data: { deleted: true },
+//   })
+
+//   return chat.id
+// }

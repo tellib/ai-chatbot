@@ -88,6 +88,7 @@ export function MessagesProvider({
   }
 
   const streamMessage = async (): Promise<void> => {
+    setLoading(true)
     // Create temporary assistant message for streaming
     const assistantMessage: Message = {
       content: '',

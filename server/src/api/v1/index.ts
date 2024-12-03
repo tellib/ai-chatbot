@@ -7,7 +7,10 @@ import { messages } from './message/routes'
 const router: Router = Router()
 
 router.get('/', (req, res) => {
-  res.json({ message: 'Hello, World!' })
+  res.json({
+    version: '0.1.0',
+    status: 'Online',
+  })
 })
 router.use('/auth', auth)
 router.use('/chat', requireUser, chats)

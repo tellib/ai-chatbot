@@ -11,7 +11,6 @@ export default async function ChatsPage() {
       </h1>
       <NewChat />
       <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold">{t('recent')}</h2>
         <RecentChats />
       </div>
     </div>
